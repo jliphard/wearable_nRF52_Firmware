@@ -50,6 +50,8 @@
 #include "ADC.h"        //used for battery reading
 #include "SPIFlash.h"   //used for storage
 
+#include "SEGGER_RTT.h"
+
 #define DEVICE_NAME                      "MENTAID"                                 /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME                "Stanford University"                     /**< Manufacturer. Will be passed to Device Information Service. */
 #define APP_ADV_INTERVAL                 1600                                      //The advertising interval (in units of 0.625 ms
@@ -954,17 +956,13 @@ void FLASH_Write_Record( uint8_t wp[] )
   
   if (record_counter >= 16 )
   {
-        //NRF_LOG_INFO("FWR: Ready to flush to %d.\r\n", GLOB_datastart);
-        //RTC1_timer_stop();
         flash_green();
         
-        NRF_LOG_INFO("TH:%d VB:%d\r\n",heartbeat16, battery_level8);
-        NRF_LOG_FLUSH();
-        
+        SEGGER_RTT_printf(0, "TH:%d VB:%d\r\n", heartbeat16, battery_level8);
         //NRF_LOG_HEXDUMP_DEBUG((uint8_t *)flash_page_buffer, 256);
         
         //flush to memory.... 
-        //FLASH_Page_Write( GLOB_datastart, flash_page_buffer );  
+        FLASH_Page_Write( GLOB_datastart, flash_page_buffer );  
      
         //advance counter  
         GLOB_datastart++;
@@ -972,9 +970,6 @@ void FLASH_Write_Record( uint8_t wp[] )
         //clear the buffer  
         memset(flash_page_buffer, 0, sizeof(flash_page_buffer));
         record_counter = 0; 
-        
-        //and start everything up again...
-        //RTC1_timer_start();
     }
   
 };
@@ -1013,7 +1008,6 @@ void add_to_flash( uint16_t counter, uint8_t batt, uint8_t pressure, uint8_t tem
 
 static void update_battery(void)
 {            
-    NRF_LOG_DEBUG("Update_slow(void).\r\n");
     
     //Battery ADC conversion process
     //this will update Current_VBATT() via callback
@@ -1024,10 +1018,13 @@ static void update_battery(void)
     
     //for debugging let's record the actual voltage
     battery_level8 = (uint8_t)(Current_VBATT() - 300);
-    NRF_LOG_DEBUG("Battery: %d\r\n", battery_level8);
+ 
+    SEGGER_RTT_printf(0, "Battery: %d\n", battery_level8);
     
-    //bluetooth update
     /*
+     
+    //bluetooth update
+    
     ret_code_t err_code = NRF_SUCCESS;  
     err_code = ble_bas_battery_level_update(&m_bas, battery_level);
 
@@ -1044,11 +1041,11 @@ uint8_t batt_cycle = 0;
  
 static void update_fast(void)
 {
-    //NRF_LOG_INFO("Update_fast(void).\r\n");
-     
+
+    SEGGER_RTT_WriteString(0, "Update fast.\n");
+
     if ( batt_cycle > 3 ) 
     {
-        //NRF_LOG_DEBUG("TH:%d VB:%d\r\n",heartbeat16, battery_level8);
         update_battery();
         batt_cycle = 0;
     } else {
@@ -1070,7 +1067,7 @@ static void update_fast(void)
     //NRF_LOG_DEBUG("T:%d\r\n",BMP280T8);
     //NRF_LOG_DEBUG("H:%d\r\n",BMP280H8);
     
-    add_to_flash( heartbeat16, battery_level8, BMP280P8, BMP280T8, BMP280H8 /*, battery_level16 */ );    
+    add_to_flash( heartbeat16, battery_level8, BMP280P8, BMP280T8, BMP280H8 );    
     
     /*
     ret_code_t err_code = NRF_SUCCESS;
@@ -1141,8 +1138,7 @@ int main(void)
     //NRF_LOG_DEBUG("FLASH: Erase\r\n");
     
     GLOB_datastart = FLASH_Get_First_Available_Location();
-    NRF_LOG_INFO("First empty page: %d\r\n", GLOB_datastart);
-    NRF_LOG_FLUSH();
+    SEGGER_RTT_printf(0, "First empty page: %d\r\n", GLOB_datastart);
     
     flash_red();
     
@@ -1159,9 +1155,7 @@ int main(void)
     
     while( 1 ) 
     {
-        if (NRF_LOG_PROCESS() == true) {
-            //NRF_LOG_FLUSH();
-        };
+ 
     };
      
     /*

@@ -73,11 +73,6 @@ SRC_FILES += \
   $(SDK_ROOT)/external/segger_rtt/RTT_Syscalls_GCC.c \
   $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT.c \
   $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT_printf.c \
-#  $(SDK_ROOT)/external/fatfs/port/diskio_blkdev.c \
-
-#include "ff.h"
-#include "diskio_blkdev.h"
-#include "nrf_block_dev_sdc.h"
 
 # Include folders common to all targets
 INC_FOLDERS += \
@@ -215,7 +210,8 @@ CFLAGS += -DNRF52_PAN_64
 CFLAGS += -DNRF52_PAN_74
 CFLAGS += -DNRF_SD_BLE_API_VERSION=4
 CFLAGS += -DS132
-CFLAGS += -DSOFTDEVICE_PRESENT
+CFLAGS += -DNRF_LOG_USES_RTT=1
+#CFLAGS += -DSOFTDEVICE_PRESENT
 CFLAGS += -DSWI_DISABLE0
 CFLAGS += -D__HEAP_SIZE=0
 CFLAGS += -mcpu=cortex-m4

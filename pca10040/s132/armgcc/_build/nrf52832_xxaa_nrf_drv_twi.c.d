@@ -1,6 +1,6 @@
 _build/nrf52832_xxaa_nrf_drv_twi.c.o: \
- ../../../../../../components/drivers_nrf/twi_master/nrf_drv_twi.c \
- ../../../../../../components/libraries/util/sdk_common.h \
+ /ARM/nRF5_SDK_13//components/drivers_nrf/twi_master/nrf_drv_twi.c \
+ /ARM/nRF5_SDK_13//components/libraries/util/sdk_common.h \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/lib/gcc/arm-none-eabi/6.3.1/include/stdint.h \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/stdint.h \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/machine/_default_types.h \
@@ -23,60 +23,54 @@ _build/nrf52832_xxaa_nrf_drv_twi.c.o: \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/sys/cdefs.h \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/sys/string.h \
  ../config/sdk_config.h \
- ../../../../../../components/libraries/util/nordic_common.h \
- ../../../../../../components/device/compiler_abstraction.h \
- ../../../../../../components/libraries/util/sdk_os.h \
- ../../../../../../components/libraries/util/sdk_errors.h \
- ../../../../../../components/softdevice/s132/headers/nrf_error.h \
- ../../../../../../components/libraries/util/app_util.h \
- ../../../../../../components/device/nrf.h \
- ../../../../../../components/device/nrf52.h \
- ../../../../../../components/toolchain/cmsis/include/core_cm4.h \
- ../../../../../../components/toolchain/cmsis/include/core_cmInstr.h \
- ../../../../../../components/toolchain/cmsis/include/cmsis_gcc.h \
- ../../../../../../components/toolchain/cmsis/include/core_cmFunc.h \
- ../../../../../../components/toolchain/cmsis/include/core_cmSimd.h \
- ../../../../../../components/toolchain/system_nrf52.h \
- ../../../../../../components/device/nrf52_bitfields.h \
- ../../../../../../components/device/nrf51_to_nrf52.h \
- ../../../../../../components/device/nrf52_name_change.h \
- ../../../../../../components/device/compiler_abstraction.h \
- ../../../../../../components/libraries/util/sdk_macros.h \
- ../../../../../../components/drivers_nrf/twi_master/nrf_drv_twi.h \
- ../../../../../../components/libraries/util/nordic_common.h \
- ../../../../../../components/drivers_nrf/hal/nrf_twi.h \
- ../../../../../../components/drivers_nrf/hal/nrf_peripherals.h \
- ../../../../../../components/device/nrf52832_peripherals.h \
- ../../../../../../components/libraries/util/sdk_errors.h \
- ../../../../../../components/drivers_nrf/common/nrf_drv_common.h \
- ../../../../../../components/libraries/util/nrf_assert.h \
- ../../../../../../components/libraries/util/app_error.h \
+ /ARM/nRF5_SDK_13//components/libraries/util/nordic_common.h \
+ /ARM/nRF5_SDK_13//components/device/compiler_abstraction.h \
+ /ARM/nRF5_SDK_13//components/libraries/util/sdk_os.h \
+ /ARM/nRF5_SDK_13//components/libraries/util/sdk_errors.h \
+ /ARM/nRF5_SDK_13//components/softdevice/s132/headers/nrf_error.h \
+ /ARM/nRF5_SDK_13//components/libraries/util/app_util.h \
+ /ARM/nRF5_SDK_13//components/device/nrf.h \
+ /ARM/nRF5_SDK_13//components/device/nrf52.h \
+ /ARM/nRF5_SDK_13//components/toolchain/cmsis/include/core_cm4.h \
+ /ARM/nRF5_SDK_13//components/toolchain/cmsis/include/core_cmInstr.h \
+ /ARM/nRF5_SDK_13//components/toolchain/cmsis/include/cmsis_gcc.h \
+ /ARM/nRF5_SDK_13//components/toolchain/cmsis/include/core_cmFunc.h \
+ /ARM/nRF5_SDK_13//components/toolchain/cmsis/include/core_cmSimd.h \
+ /ARM/nRF5_SDK_13//components/toolchain/system_nrf52.h \
+ /ARM/nRF5_SDK_13//components/device/nrf52_bitfields.h \
+ /ARM/nRF5_SDK_13//components/device/nrf51_to_nrf52.h \
+ /ARM/nRF5_SDK_13//components/device/nrf52_name_change.h \
+ /ARM/nRF5_SDK_13//components/device/compiler_abstraction.h \
+ /ARM/nRF5_SDK_13//components/libraries/util/sdk_macros.h \
+ /ARM/nRF5_SDK_13//components/drivers_nrf/twi_master/nrf_drv_twi.h \
+ /ARM/nRF5_SDK_13//components/libraries/util/nordic_common.h \
+ /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_twi.h \
+ /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_peripherals.h \
+ /ARM/nRF5_SDK_13//components/device/nrf52832_peripherals.h \
+ /ARM/nRF5_SDK_13//components/libraries/util/sdk_errors.h \
+ /ARM/nRF5_SDK_13//components/drivers_nrf/common/nrf_drv_common.h \
+ /ARM/nRF5_SDK_13//components/libraries/util/nrf_assert.h \
+ /ARM/nRF5_SDK_13//components/libraries/util/app_error.h \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/stdio.h \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/lib/gcc/arm-none-eabi/6.3.1/include/stdarg.h \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/sys/types.h \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/sys/_pthreadtypes.h \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/machine/types.h \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/sys/stdio.h \
- ../../../../../../components/libraries/util/app_error_weak.h \
- ../../../../../../components/drivers_nrf/hal/nrf_gpio.h \
+ /ARM/nRF5_SDK_13//components/libraries/util/app_error_weak.h \
+ /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_gpio.h \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/stdlib.h \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/machine/stdlib.h \
- ../../../../../../components/libraries/util/app_util_platform.h \
- ../../../../../../components/softdevice/s132/headers/nrf_soc.h \
- ../../../../../../components/softdevice/s132/headers/nrf_svc.h \
- ../../../../../../components/softdevice/s132/headers/nrf_error_soc.h \
- ../../../../../../components/softdevice/s132/headers/nrf_error.h \
- ../../../../../../components/softdevice/s132/headers/nrf_nvic.h \
- ../../../../../../components/libraries/util/nrf_assert.h \
- ../../../../../../components/drivers_nrf/delay/nrf_delay.h \
- ../../../../../../components/libraries/log/nrf_log.h \
- ../../../../../../components/libraries/strerror/nrf_strerror.h \
- ../../../../../../components/libraries/log/src/nrf_log_internal.h \
- ../../../../../../components/libraries/util/app_util.h \
- ../../../../../../components/libraries/log/nrf_log_ctrl.h \
- ../../../../../../components/libraries/log/src/nrf_log_ctrl_internal.h
+ /ARM/nRF5_SDK_13//components/libraries/util/app_util_platform.h \
+ /ARM/nRF5_SDK_13//components/libraries/util/nrf_assert.h \
+ /ARM/nRF5_SDK_13//components/drivers_nrf/delay/nrf_delay.h \
+ /ARM/nRF5_SDK_13//components/libraries/log/nrf_log.h \
+ /ARM/nRF5_SDK_13//components/libraries/log/src/nrf_log_internal.h \
+ /ARM/nRF5_SDK_13//components/libraries/util/app_util.h \
+ /ARM/nRF5_SDK_13//components/libraries/log/nrf_log_ctrl.h \
+ /ARM/nRF5_SDK_13//components/libraries/log/src/nrf_log_ctrl_internal.h
 
-../../../../../../components/libraries/util/sdk_common.h:
+/ARM/nRF5_SDK_13//components/libraries/util/sdk_common.h:
 
 /ARM/gcc-arm-none-eabi-6-2017-q1-update/lib/gcc/arm-none-eabi/6.3.1/include/stdint.h:
 
@@ -122,61 +116,61 @@ _build/nrf52832_xxaa_nrf_drv_twi.c.o: \
 
 ../config/sdk_config.h:
 
-../../../../../../components/libraries/util/nordic_common.h:
+/ARM/nRF5_SDK_13//components/libraries/util/nordic_common.h:
 
-../../../../../../components/device/compiler_abstraction.h:
+/ARM/nRF5_SDK_13//components/device/compiler_abstraction.h:
 
-../../../../../../components/libraries/util/sdk_os.h:
+/ARM/nRF5_SDK_13//components/libraries/util/sdk_os.h:
 
-../../../../../../components/libraries/util/sdk_errors.h:
+/ARM/nRF5_SDK_13//components/libraries/util/sdk_errors.h:
 
-../../../../../../components/softdevice/s132/headers/nrf_error.h:
+/ARM/nRF5_SDK_13//components/softdevice/s132/headers/nrf_error.h:
 
-../../../../../../components/libraries/util/app_util.h:
+/ARM/nRF5_SDK_13//components/libraries/util/app_util.h:
 
-../../../../../../components/device/nrf.h:
+/ARM/nRF5_SDK_13//components/device/nrf.h:
 
-../../../../../../components/device/nrf52.h:
+/ARM/nRF5_SDK_13//components/device/nrf52.h:
 
-../../../../../../components/toolchain/cmsis/include/core_cm4.h:
+/ARM/nRF5_SDK_13//components/toolchain/cmsis/include/core_cm4.h:
 
-../../../../../../components/toolchain/cmsis/include/core_cmInstr.h:
+/ARM/nRF5_SDK_13//components/toolchain/cmsis/include/core_cmInstr.h:
 
-../../../../../../components/toolchain/cmsis/include/cmsis_gcc.h:
+/ARM/nRF5_SDK_13//components/toolchain/cmsis/include/cmsis_gcc.h:
 
-../../../../../../components/toolchain/cmsis/include/core_cmFunc.h:
+/ARM/nRF5_SDK_13//components/toolchain/cmsis/include/core_cmFunc.h:
 
-../../../../../../components/toolchain/cmsis/include/core_cmSimd.h:
+/ARM/nRF5_SDK_13//components/toolchain/cmsis/include/core_cmSimd.h:
 
-../../../../../../components/toolchain/system_nrf52.h:
+/ARM/nRF5_SDK_13//components/toolchain/system_nrf52.h:
 
-../../../../../../components/device/nrf52_bitfields.h:
+/ARM/nRF5_SDK_13//components/device/nrf52_bitfields.h:
 
-../../../../../../components/device/nrf51_to_nrf52.h:
+/ARM/nRF5_SDK_13//components/device/nrf51_to_nrf52.h:
 
-../../../../../../components/device/nrf52_name_change.h:
+/ARM/nRF5_SDK_13//components/device/nrf52_name_change.h:
 
-../../../../../../components/device/compiler_abstraction.h:
+/ARM/nRF5_SDK_13//components/device/compiler_abstraction.h:
 
-../../../../../../components/libraries/util/sdk_macros.h:
+/ARM/nRF5_SDK_13//components/libraries/util/sdk_macros.h:
 
-../../../../../../components/drivers_nrf/twi_master/nrf_drv_twi.h:
+/ARM/nRF5_SDK_13//components/drivers_nrf/twi_master/nrf_drv_twi.h:
 
-../../../../../../components/libraries/util/nordic_common.h:
+/ARM/nRF5_SDK_13//components/libraries/util/nordic_common.h:
 
-../../../../../../components/drivers_nrf/hal/nrf_twi.h:
+/ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_twi.h:
 
-../../../../../../components/drivers_nrf/hal/nrf_peripherals.h:
+/ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_peripherals.h:
 
-../../../../../../components/device/nrf52832_peripherals.h:
+/ARM/nRF5_SDK_13//components/device/nrf52832_peripherals.h:
 
-../../../../../../components/libraries/util/sdk_errors.h:
+/ARM/nRF5_SDK_13//components/libraries/util/sdk_errors.h:
 
-../../../../../../components/drivers_nrf/common/nrf_drv_common.h:
+/ARM/nRF5_SDK_13//components/drivers_nrf/common/nrf_drv_common.h:
 
-../../../../../../components/libraries/util/nrf_assert.h:
+/ARM/nRF5_SDK_13//components/libraries/util/nrf_assert.h:
 
-../../../../../../components/libraries/util/app_error.h:
+/ARM/nRF5_SDK_13//components/libraries/util/app_error.h:
 
 /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/stdio.h:
 
@@ -190,38 +184,26 @@ _build/nrf52832_xxaa_nrf_drv_twi.c.o: \
 
 /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/sys/stdio.h:
 
-../../../../../../components/libraries/util/app_error_weak.h:
+/ARM/nRF5_SDK_13//components/libraries/util/app_error_weak.h:
 
-../../../../../../components/drivers_nrf/hal/nrf_gpio.h:
+/ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_gpio.h:
 
 /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/stdlib.h:
 
 /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/machine/stdlib.h:
 
-../../../../../../components/libraries/util/app_util_platform.h:
+/ARM/nRF5_SDK_13//components/libraries/util/app_util_platform.h:
 
-../../../../../../components/softdevice/s132/headers/nrf_soc.h:
+/ARM/nRF5_SDK_13//components/libraries/util/nrf_assert.h:
 
-../../../../../../components/softdevice/s132/headers/nrf_svc.h:
+/ARM/nRF5_SDK_13//components/drivers_nrf/delay/nrf_delay.h:
 
-../../../../../../components/softdevice/s132/headers/nrf_error_soc.h:
+/ARM/nRF5_SDK_13//components/libraries/log/nrf_log.h:
 
-../../../../../../components/softdevice/s132/headers/nrf_error.h:
+/ARM/nRF5_SDK_13//components/libraries/log/src/nrf_log_internal.h:
 
-../../../../../../components/softdevice/s132/headers/nrf_nvic.h:
+/ARM/nRF5_SDK_13//components/libraries/util/app_util.h:
 
-../../../../../../components/libraries/util/nrf_assert.h:
+/ARM/nRF5_SDK_13//components/libraries/log/nrf_log_ctrl.h:
 
-../../../../../../components/drivers_nrf/delay/nrf_delay.h:
-
-../../../../../../components/libraries/log/nrf_log.h:
-
-../../../../../../components/libraries/strerror/nrf_strerror.h:
-
-../../../../../../components/libraries/log/src/nrf_log_internal.h:
-
-../../../../../../components/libraries/util/app_util.h:
-
-../../../../../../components/libraries/log/nrf_log_ctrl.h:
-
-../../../../../../components/libraries/log/src/nrf_log_ctrl_internal.h:
+/ARM/nRF5_SDK_13//components/libraries/log/src/nrf_log_ctrl_internal.h:

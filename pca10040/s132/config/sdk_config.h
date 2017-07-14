@@ -7,9 +7,11 @@
 // <h> Application 
 
 //custom
-#define NRF_LOG_ENABLED 1
-#define NRF_LOG_DEFAULT_LEVEL 3
+//#define NRF_LOG 1
+#define NRF_LOG_ENABLED 0
+#define NRF_LOG_DEFAULT_LEVEL 0
 #define NRF_LOG_BACKEND_SERIAL_USES_RTT 1
+#define NRF_LOG_USES_RTT 1
 //#define NRF_LOG_DEFERRED 1
 
 #define APP_TWI_ENABLED     1
