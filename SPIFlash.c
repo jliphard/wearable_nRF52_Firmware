@@ -15,8 +15,8 @@
 #define CMD_READ_ID             ((uint8_t)0x9F)
 #define CMD_READ_STATUS_REG     ((uint8_t)0x05)
 
-#define SPI_INSTANCE_ID  1
-#define QUEUE_LENGTH    10
+#define SPI_INSTANCE_ID   1
+#define QUEUE_LENGTH     10
 
 //will return either a 1 or 0 if the bit is enabled
 #define CHECK_BIT(var,pos) (((var)>>(pos)) & 1)
@@ -55,7 +55,7 @@ ret_code_t FLASH_Init( void )
     err_code = nrf_drv_spi_init(&m_spi_master_1, &spi_config, NULL, NULL);
      
     if ( err_code != NRF_SUCCESS ) {
-        NRF_LOG_DEBUG("FLASH_Init Fail:%d\r\n", err_code);
+        //NRF_LOG_DEBUG("FLASH_Init Fail:%d\r\n", err_code);
     }
     
     return err_code;
@@ -67,7 +67,7 @@ ret_code_t FLASH_Get_ID( void )
     cmd[0] = CMD_READ_ID; //Get JEDEC ID
     memset(rx4, 0, sizeof(rx4));
     err_code = nrf_drv_spi_transfer(&m_spi_master_1, cmd, sizeof(cmd), rx4, sizeof(rx4));
-    NRF_LOG_DEBUG("MemID: %d Type: %d CAP: %d\r\n", rx4[1], rx4[2], rx4[3]); 
+    //NRF_LOG_DEBUG("MemID: %d Type: %d CAP: %d\r\n", rx4[1], rx4[2], rx4[3]); 
     return err_code;
 }
 
@@ -84,15 +84,15 @@ uint8_t FLASH_Read_Status( void )
     */
 
     if ( CHECK_BIT(rx2[1],0) ) {  
-        NRF_LOG_DEBUG("SR: Busy\r\n")
+        //NRF_LOG_DEBUG("SR: Busy\r\n")
     } else {
-        NRF_LOG_DEBUG("SR: Ready\r\n")
+        //NRF_LOG_DEBUG("SR: Ready\r\n")
     };
    
     if ( CHECK_BIT(rx2[1],1) ) {
-        NRF_LOG_DEBUG("SR: WEL\r\n")
+        //NRF_LOG_DEBUG("SR: WEL\r\n")
     } else {
-        NRF_LOG_DEBUG("SR: NoWEL\r\n")
+        //NRF_LOG_DEBUG("SR: NoWEL\r\n")
     };
     
     return rx2[1];
@@ -109,7 +109,7 @@ bool FLASH_Is_Write_Enabled( void )
     //S1 == 1 Write Enable Latch (WEL) is a read only bit in the status register 
     if ( CHECK_BIT(rx2[1],1) != 1) {
         retval = false;
-        NRF_LOG_DEBUG("FLASH_Is_Write_Enabled: False\r\n"); 
+        //NRF_LOG_DEBUG("FLASH_Is_Write_Enabled: False\r\n"); 
     }
 
     return retval;
@@ -125,7 +125,7 @@ bool FLASH_Is_Busy( void )
     
     if ( CHECK_BIT(rx2[1],0) == 1 ) {
         retval = true;
-        NRF_LOG_DEBUG("FLASH_Is_Busy!\r\n"); 
+        //NRF_LOG_DEBUG("FLASH_Is_Busy!\r\n"); 
     } 
 
     return retval;
@@ -139,7 +139,7 @@ uint8_t * FLASH_Page_Read( uint16_t pageN )
   memset(rxHalf, 0, sizeof(rxHalf));
   
   if ( pageN >  4095 ) { //memory has 4095 pages 
-      NRF_LOG_DEBUG("FLASH_Page_Read: Out of bounds!\r\n")
+      //NRF_LOG_DEBUG("FLASH_Page_Read: Out of bounds!\r\n")
       return rx256;
   };
   
@@ -173,22 +173,22 @@ void FLASH_Page_WriteTest( uint16_t pageN )
   //memory has 0-4095 pages, and each page has length 256  
         
   if ( pageN > 4095 ) { //memory has 4095 pages 
-      NRF_LOG_DEBUG("FLASH_Page_Write: Out of bounds!\r\n")
+      //NRF_LOG_DEBUG("FLASH_Page_Write: Out of bounds!\r\n")
       return;
   };
     
   if ( !FLASH_Set_Write_Enable() ) {
-      NRF_LOG_DEBUG("FLASH_Page_Write: Write not enabled!\r\n")
+      //NRF_LOG_DEBUG("FLASH_Page_Write: Write not enabled!\r\n")
       return;
   };
   
   if ( FLASH_Is_Busy() ) {
-      NRF_LOG_DEBUG("FLASH_Page_Write: Busy!\r\n")
+      //NRF_LOG_DEBUG("FLASH_Page_Write: Busy!\r\n")
       return;
   };
   
   if ( FLASH_Page_Is_Empty( pageN) == false ) {
-      NRF_LOG_DEBUG("FLASH_Page_Write: Page already contains data!\r\n")
+      //NRF_LOG_DEBUG("FLASH_Page_Write: Page already contains data!\r\n")
       return;
   };
  
@@ -212,7 +212,7 @@ void FLASH_Page_WriteTest( uint16_t pageN )
   nrf_drv_spi_transfer(&m_spi_master_1, txHalf, sizeof(txHalf), NULL, 0);
   
   if ( !FLASH_Set_Write_Enable() ) {
-    NRF_LOG_DEBUG("FLASH_Page_Write: Write not enabled!\r\n")
+    //NRF_LOG_DEBUG("FLASH_Page_Write: Write not enabled!\r\n")
     return;
   };
   
@@ -229,22 +229,22 @@ void FLASH_Page_Write( uint16_t pageN, uint8_t *wp )
     
   //memory has 0-4095 pages, and each page has length 256    
   if ( pageN > 4095 ) {
-      NRF_LOG_DEBUG("FLASH_Page_Write: Out of bounds!\r\n")
+      //NRF_LOG_DEBUG("FLASH_Page_Write: Out of bounds!\r\n")
       return;
   };
     
   if ( !FLASH_Set_Write_Enable() ) {
-      NRF_LOG_DEBUG("FLASH_Page_Write: Write not enabled!\r\n")
+      //NRF_LOG_DEBUG("FLASH_Page_Write: Write not enabled!\r\n")
       return;
   };
   
   if ( FLASH_Is_Busy() ) {
-      NRF_LOG_DEBUG("FLASH_Page_Write: Busy!\r\n")
+      //NRF_LOG_DEBUG("FLASH_Page_Write: Busy!\r\n")
       return;
   };
   
   if ( FLASH_Page_Is_Empty( pageN) == false ) {
-      NRF_LOG_DEBUG("FLASH_Page_Write: Page already contains data!\r\n")
+      //NRF_LOG_DEBUG("FLASH_Page_Write: Page already contains data!\r\n")
       return;
   };
  
@@ -272,7 +272,7 @@ void FLASH_Page_Write( uint16_t pageN, uint8_t *wp )
   for( i = 0; i < 10; i++ ) {
       nrf_delay_ms(20); 
       if ( FLASH_Is_Busy() ) {
-          NRF_LOG_DEBUG("Erase: FLASH is still busy\r\n");
+          //NRF_LOG_DEBUG("Erase: FLASH is still busy\r\n");
       } else {
           break;   
       }
@@ -284,7 +284,7 @@ void FLASH_Page_Write( uint16_t pageN, uint8_t *wp )
       if ( FLASH_Set_Write_Enable() ) {
           break;
       } else {
-          NRF_LOG_DEBUG("Erase: Not able to write\r\n");
+          //NRF_LOG_DEBUG("Erase: Not able to write\r\n");
       }
   }
   
@@ -324,10 +324,10 @@ bool FLASH_Page_Is_Empty( uint16_t pageN )
   //NRF_LOG_HEXDUMP_DEBUG((uint8_t *)rx8, 8);
   
   if ( check == 1020 ) {
-    NRF_LOG_DEBUG("FLASH_PE: Page:%d is empty.\r\n", pageN);
+    //NRF_LOG_DEBUG("FLASH_PE: Page:%d is empty.\r\n", pageN);
     return true;
   } else {
-    NRF_LOG_DEBUG("FLASH_PE: Page:%d contains:%d\r\n", pageN, check);
+    //NRF_LOG_DEBUG("FLASH_PE: Page:%d contains:%d\r\n", pageN, check);
     return false;
   }
   
@@ -340,20 +340,20 @@ uint16_t FLASH_Get_First_Available_Location( void )
         
    for(ds = 0; ds < 4096; ds++)
    {
-       NRF_LOG_DEBUG("Testing page %d\r\n", ds);
+       //NRF_LOG_DEBUG("Testing page %d\r\n", ds);
        
        if( FLASH_Page_Is_Empty( ds ) )
        {
-          NRF_LOG_DEBUG("Page %d is empty.\r\n", ds);
+          //NRF_LOG_DEBUG("Page %d is empty.\r\n", ds);
           return ds;
        } else {
           //keep searching 
-          NRF_LOG_DEBUG("Page %d is full.\r\n", ds);
+          //NRF_LOG_DEBUG("Page %d is full.\r\n", ds);
        };
    };
    
    //should never really get here 
-   NRF_LOG_DEBUG("No memory available!\r\n", ds);
+   //NRF_LOG_DEBUG("No memory available!\r\n", ds);
    return 4096;
 }
 
@@ -382,11 +382,11 @@ void FLASH_Reset( void )
 void FLASH_Erase( void )
 {
   if( !FLASH_Set_Write_Enable() ) {
-      NRF_LOG_DEBUG("Erase: Write not enabled\r\n");
+      //NRF_LOG_DEBUG("Erase: Write not enabled\r\n");
   }
   
   if ( FLASH_Is_Busy() ) {
-      NRF_LOG_DEBUG("Erase: FLASH is busy\r\n");
+      //NRF_LOG_DEBUG("Erase: FLASH is busy\r\n");
   }
   
   NRF_LOG_DEBUG("Erase: Erasing Flash\r\n");
@@ -397,7 +397,7 @@ void FLASH_Erase( void )
   //wait for some
   while ( FLASH_Is_Busy() ) {
       nrf_delay_ms(1500);
-      NRF_LOG_DEBUG("Erase: FLASH is still busy\r\n");
+      //NRF_LOG_DEBUG("Erase: FLASH is still busy\r\n");
   }
 }
 
@@ -412,7 +412,7 @@ bool FLASH_Set_Write_Enable( void )
     enabled = true;
   } else {
     enabled = false;
-    NRF_LOG_DEBUG("FLASH_Set_Write_Enable Fail\r\n");
+    //NRF_LOG_DEBUG("FLASH_Set_Write_Enable Fail\r\n");
   };
     
   return enabled;

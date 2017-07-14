@@ -6,6 +6,7 @@
 #endif
 // <h> Application 
 
+//#define APP_IRQ_PRIORITY_LOW 3
 //custom
 //#define NRF_LOG 1
 #define NRF_LOG_ENABLED 0
@@ -3175,7 +3176,7 @@
 // <31=> 1024 Hz 
 
 #ifndef APP_TIMER_CONFIG_RTC_FREQUENCY
-#define APP_TIMER_CONFIG_RTC_FREQUENCY 0
+#define APP_TIMER_CONFIG_RTC_FREQUENCY 7
 #endif
 
 // <o> APP_TIMER_CONFIG_IRQ_PRIORITY  - Interrupt priority
@@ -3202,7 +3203,7 @@
 // <i> will fail.
 
 #ifndef APP_TIMER_CONFIG_OP_QUEUE_SIZE
-#define APP_TIMER_CONFIG_OP_QUEUE_SIZE 10
+#define APP_TIMER_CONFIG_OP_QUEUE_SIZE 20
 #endif
 
 // <q> APP_TIMER_CONFIG_USE_SCHEDULER  - Enable scheduling app_timer events to app_scheduler
@@ -3213,8 +3214,6 @@
 #endif
 
 // <q> APP_TIMER_WITH_PROFILER  - Enable app_timer profiling
- 
-
 #ifndef APP_TIMER_WITH_PROFILER
 #define APP_TIMER_WITH_PROFILER 0
 #endif
@@ -3224,7 +3223,6 @@
 
 // <i> If option is enabled RTC is kept running even if there is no active timers.
 // <i> This option can be used when app_timer is used for timestamping.
-
 #ifndef APP_TIMER_KEEPS_RTC_ACTIVE
 #define APP_TIMER_KEEPS_RTC_ACTIVE 0
 #endif

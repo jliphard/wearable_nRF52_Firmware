@@ -303,6 +303,8 @@
           <cTool>
             <incDir>
               <pElem>../../..</pElem>
+              <pElem>/ARM/nRF5_SDK_13</pElem>
+              <pElem>.</pElem>
             </incDir>
           </cTool>
         </makeTool>

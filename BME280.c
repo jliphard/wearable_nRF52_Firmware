@@ -1,12 +1,8 @@
 
-#include "I2C.h"
-#include "BME280.h"
-#include "nrf_drv_twi.h"
 
-#define NRF_LOG_MODULE_NAME "BME"
+#include "BME280.h"
 
 #define BME280_ADDRESS_1  0x76   // Address of BMP280 altimeter 1
-//#define BME280_ADDRESS_2  0x77   // Address of BMP280 altimeter 2
 
 // BME280 registers
 #define BME280_ID         0xD0
@@ -33,6 +29,9 @@ enum IIRFilter {full = 0,  /* bandwidth at full sample rate */ BW0_223ODR, BW0_0
 enum Mode {BME280Sleep = 0, forced, forced2, normal};
 enum SBy  {t_00_5ms = 0, t_62_5ms, t_125ms, t_250ms, t_500ms, t_1000ms, t_10ms, t_20ms};
 
+// Read and store calibration data
+uint8_t calib[26];
+  
 // BME280 compensation parameters
 uint8_t  dig_H1, dig_H3, dig_H6;
 uint16_t dig_T1, dig_P1, dig_H4, dig_H5;
@@ -47,14 +46,11 @@ uint8_t Posr = P_OSR_16, Hosr = H_OSR_16, Tosr = T_OSR_02, Mode = normal, IIRFil
 // * @brief Function for setting active
 void BME280_Turn_On(void)
 {
-    //ret_code_t err_code;
-    //NRF_LOG_DEBUG("BME_280_set_up(void)\r\n");
     
     uint8_t e = readByte(BME280_ADDRESS_1, BME280_ID);
     
     //NRF_LOG_DEBUG("BME_280_set_mode: readByte returned e: %d\r\n", e);
     //NRF_LOG_DEBUG("Should be 96 (HEX: 60)\r\n");
-    NRF_LOG_FLUSH();
                    
     if(e == 0x60) {
         writeByte(BME280_ADDRESS_1, BME280_RESET, 0xB6); // reset BME280 before initialization   
@@ -66,7 +62,7 @@ void BME280_Turn_On(void)
     else {
         //NRF_LOG_DEBUG("BMP280 not responding\r\n");
     }
-    NRF_LOG_FLUSH();
+
 }
 
 void BME280_Configure( uint8_t address )
@@ -82,8 +78,7 @@ void BME280_Configure( uint8_t address )
   // Set standby time interval in normal mode and bandwidth
   writeByte(address, BME280_CONFIG, SBy << 5 | IIRFilter << 2);
   
-  // Read and store calibration data
-  uint8_t calib[26];
+
   
   readBytes(address, BME280_CALIB00, 26, &calib[0]);
   
@@ -119,7 +114,6 @@ void BME280_Configure( uint8_t address )
   dig_H6 = calib[6];
   
   //NRF_LOG_DEBUG("BME280_Configure() completed.\r\n");
-  //NRF_LOG_FLUSH();
 }
 
 void BME280_Read_PTH(int32_t * resultPTH)
@@ -128,24 +122,21 @@ void BME280_Read_PTH(int32_t * resultPTH)
   int32_t result[3];
   int32_t var1, var2, t_fine;
   
+  SEGGER_RTT_WriteString(0, "Read PTH1 ");
+  
   readBytes(BME280_ADDRESS_1, BME280_PRESS_MSB, 9, &rawData[0]);  
   
   //Pressure
   result[0] = (int32_t) (((uint32_t) rawData[0] << 16 | (uint32_t) rawData[1] << 8 | rawData[2]) >> 4);
-  //NRF_LOG_DEBUG("BME280P: %d\r\n", result[0]);
-  
-  //Temperature
   result[1] = (int32_t) (((uint32_t) rawData[3] << 16 | (uint32_t) rawData[4] << 8 | rawData[5]) >> 4);
-  //NRF_LOG_DEBUG("BME280T: %d\r\n", result[1]);
-   
-  //Humidity
   result[2] = (int16_t) (((uint16_t) rawData[6] << 8 | rawData[7]) );
-  //NRF_LOG_DEBUG("BME280H: %d\r\n", result[2]);
+  
+  SEGGER_RTT_WriteString(0, " PTH2 ");
   
   //Need t_fine for all three compensations
   int32_t adc_T = result[1];
   
-  var1 = ((((adc_T >> 3) - ((int32_t)dig_T1 << 1))) * ((int32_t)dig_T2)) >> 11;
+  var1 = (((( adc_T >> 3) - ((int32_t)dig_T1 << 1))) * ((int32_t)dig_T2)) >> 11;
   var2 = (((((adc_T >> 4) - ((int32_t)dig_T1)) * ((adc_T >> 4) - ((int32_t)dig_T1))) >> 12) * ((int32_t)dig_T3)) >> 14;
   
   t_fine = var1 + var2;
@@ -154,12 +145,8 @@ void BME280_Read_PTH(int32_t * resultPTH)
   resultPTH[1] = BME280_Compensate_T(           t_fine);
   resultPTH[2] = BME280_Compensate_H(result[2], t_fine);
   
-  //NRF_LOG_INFO("P: %d\r\n", resultPTH[0]);
-  //NRF_LOG_INFO("T: %d\r\n", resultPTH[1]);
-  //NRF_LOG_INFO("H: %d\r\n", resultPTH[2]);
-  
-  //NRF_LOG_FLUSH();
-    
+  SEGGER_RTT_WriteString(0, "PTH3.\n");
+     
 }  
 
 // Returns humidity in %RH as unsigned 32 bit integer in Q22.10 format (22integer and 10fractional bits).

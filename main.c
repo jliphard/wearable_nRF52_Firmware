@@ -60,7 +60,7 @@
                                                                                    // 0 = infinite advertizing                                                                                        
 #define CONN_CFG_TAG                     1                                          /**< A tag that refers to the BLE stack configuration we set with @ref sd_ble_cfg_set. Default tag is @ref BLE_CONN_CFG_TAG_DEFAULT. */
 
-#define MEAS_INTERVAL                    APP_TIMER_TICKS(1000)
+#define MEAS_INTERVAL                    APP_TIMER_TICKS(200)
 
 #define SENSOR_CONTACT_DETECTED_INTERVAL APP_TIMER_TICKS(5000)                      /**< Sensor Contact Detected toggle interval (ticks). */
 
@@ -113,9 +113,11 @@ uint8_t BMP280T8;
 uint8_t BMP280H8;
 
 uint8_t record_counter = 0;
-static uint8_t flash_page_buffer[16*16];
+static uint8_t  flash_page_buffer[16*16];
 static uint16_t GLOB_datastart = 0;
+uint8_t batt_cycle = 0;
 
+ret_code_t err_code;
 
 //LEDS
 //these are all defined in d52_BA.h and boards.c
@@ -142,7 +144,6 @@ void bsp_event_handler(bsp_event_t event);
 
 static void leds_init( void )
 {
-    ret_code_t err_code;
     err_code = bsp_init(BSP_INIT_LED, bsp_event_handler);
     APP_ERROR_CHECK(err_code);
 }
@@ -167,10 +168,6 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
  */
 static void delete_bonds(void)
 {
-    ret_code_t err_code;
-
-    NRF_LOG_INFO("Erase bonds!\r\n");
-
     err_code = pm_peers_delete();
     APP_ERROR_CHECK(err_code);
 }
@@ -211,7 +208,6 @@ static void fds_evt_handler(fds_evt_t const * const p_evt)
  */
 static void pm_evt_handler(pm_evt_t const * p_evt)
 {
-    ret_code_t err_code;
 
     switch (p_evt->evt_id)
     {
@@ -329,15 +325,12 @@ static void timeout_handler(void * p_context);
  */
 
 // General application timer settings.
-#define APP_TIMER_PRESCALER             15    // Value of the RTC1 PRESCALER register.
-#define APP_TIMER_OP_QUEUE_SIZE         4     // Size of timer operation queues.
+//#define APP_TIMER_PRESCALER             15    // Value of the RTC1 PRESCALER register.
+//#define APP_TIMER_OP_QUEUE_SIZE         4     // Size of timer operation queues.
     
 static void RTC1_timer_init(void)
 {
-    ret_code_t err_code;
-
-    //APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
-    
+    //APP_TIMER_BUF_SIZE
     // Initialize timer module.
     err_code = app_timer_init();
     APP_ERROR_CHECK(err_code);
@@ -348,35 +341,24 @@ static void RTC1_timer_init(void)
                                 timeout_handler);
     APP_ERROR_CHECK(err_code);
 
-    //NRF_LOG_INFO("App timer init.\r\n");
 }
 
 /**@brief Function for starting application timers.
  */
 static void RTC1_timer_start(void)
 {
-    ret_code_t err_code;
-
     //Start application timers.
     err_code = app_timer_start(m_timer_id, MEAS_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
-    
-    //NRF_LOG_INFO("App timer start.\r\n");
-    //NRF_LOG_FLUSH();
 }
 
 /**@brief Function for starting application timers.
  */
 static void RTC1_timer_stop(void)
 {
-    ret_code_t err_code;
-
-    //Start application timers.
+    //Stop application timers.
     err_code = app_timer_stop(m_timer_id);
     APP_ERROR_CHECK(err_code);
-    
-   // NRF_LOG_INFO("App timer stop.\r\n");
-    //NRF_LOG_FLUSH();
 }
 
 /**@brief Function for the GAP initialization.
@@ -386,7 +368,6 @@ static void RTC1_timer_stop(void)
  */
 static void gap_params_init(void)
 {
-    ret_code_t              err_code;
     ble_gap_conn_params_t   gap_conn_params;
     ble_gap_conn_sec_mode_t sec_mode;
 
@@ -431,7 +412,7 @@ static void gatt_evt_handler(nrf_ble_gatt_t * p_gatt, nrf_ble_gatt_evt_t const *
  */
 static void gatt_init(void)
 {
-    ret_code_t err_code = nrf_ble_gatt_init(&m_gatt, gatt_evt_handler);
+    err_code = nrf_ble_gatt_init(&m_gatt, gatt_evt_handler);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -442,7 +423,6 @@ static void gatt_init(void)
  */
 static void ble_services_init(void)
 {
-    ret_code_t     err_code;
     ble_hrs_init_t hrs_init;
     ble_bas_init_t bas_init;
     ble_dis_init_t dis_init;
@@ -510,8 +490,6 @@ static void ble_services_init(void)
  */
 static void on_conn_params_evt(ble_conn_params_evt_t * p_evt)
 {
-    ret_code_t err_code;
-
     if (p_evt->evt_type == BLE_CONN_PARAMS_EVT_FAILED)
     {
         err_code = sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_CONN_INTERVAL_UNACCEPTABLE);
@@ -532,7 +510,6 @@ static void conn_params_error_handler(uint32_t nrf_error)
  */
 static void conn_params_init(void)
 {
-    ret_code_t             err_code;
     ble_conn_params_init_t cp_init;
 
     memset(&cp_init, 0, sizeof(cp_init));
@@ -556,8 +533,6 @@ static void conn_params_init(void)
  */
 static void sleep_mode_enter(void)
 {
-    ret_code_t err_code;
-
     err_code = bsp_indication_set(BSP_INDICATE_IDLE);
     APP_ERROR_CHECK(err_code);
 
@@ -578,8 +553,6 @@ static void sleep_mode_enter(void)
  */
 static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
 {
-    ret_code_t err_code;
-
     switch (ble_adv_evt)
     {
         case BLE_ADV_EVT_FAST:
@@ -604,8 +577,6 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
  */
 static void on_ble_evt(ble_evt_t * p_ble_evt)
 {
-    ret_code_t err_code;
-
     switch (p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
@@ -724,14 +695,13 @@ static void sys_evt_dispatch(uint32_t sys_evt)
 
 static void lfclk_request(void)
 {
-    uint32_t err_code = nrf_drv_clock_init();
+    err_code = nrf_drv_clock_init();
     APP_ERROR_CHECK(err_code);
     nrf_drv_clock_lfclk_request(NULL);
 }
 
 static void ble_stack_init(void)
 {
-    ret_code_t err_code;
     nrf_clock_lf_cfg_t clock_lf_cfg = NRF_CLOCK_LFCLKSRC;
 
     // Initialize the SoftDevice handler module.
@@ -794,8 +764,6 @@ static void ble_stack_init(void)
  */
 void bsp_event_handler(bsp_event_t event)
 {
-    ret_code_t err_code;
-
     switch (event)
     {
         case BSP_EVENT_SLEEP:
@@ -828,7 +796,6 @@ void bsp_event_handler(bsp_event_t event)
 static void peer_manager_init(void)
 {
     ble_gap_sec_params_t sec_param;
-    ret_code_t           err_code;
 
     err_code = pm_init();
     APP_ERROR_CHECK(err_code);
@@ -861,7 +828,6 @@ static void peer_manager_init(void)
  */
 static void advertising_init(void)
 {
-    ret_code_t             err_code;
     ble_advdata_t          advdata;
     ble_adv_modes_config_t options;
 
@@ -891,7 +857,6 @@ static void advertising_init(void)
  */
 static void buttons_leds_init(bool * p_erase_bonds)
 {
-    ret_code_t err_code;
     bsp_event_t startup_event;
 
     err_code = bsp_init(BSP_INIT_LED | BSP_INIT_BUTTONS, bsp_event_handler);
@@ -907,7 +872,7 @@ static void buttons_leds_init(bool * p_erase_bonds)
  */
 static void log_init(void)
 {
-    ret_code_t err_code = NRF_LOG_INIT(NULL);
+    err_code = NRF_LOG_INIT(NULL);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -915,24 +880,16 @@ static void log_init(void)
  */
 static void power_manage(void)
 {
-    ret_code_t err_code = sd_app_evt_wait();
+    err_code = sd_app_evt_wait();
     APP_ERROR_CHECK(err_code);
 }
 
 //=====================================
 void FLASH_Write_Record( uint8_t wp[] )
 {
-
-  //NRF_LOG_INFO("Data log: %d, %d, %d, %d\r\n", wp[0], wp[1], wp[2], wp[3]);
-  //memory has 0-4095 pages, and each page has length 256  
-  //NRF_LOG_INFO("Log write to flash!\r\n");
-  //NRF_LOG_INFO("Data log: %d %d %d\r\n", wp, wp, wp);
-  //NRF_LOG_FLUSH();
   
   if( record_counter < 16 )
   {
-    //NRF_LOG_INFO("FWR: Adding to buffer:%d\r\n", record_counter);  
-    //NRF_LOG_FLUSH();
     //keep adding to buffer...
     flash_page_buffer[record_counter * 16 +  0] = wp[ 0];
     flash_page_buffer[record_counter * 16 +  1] = wp[ 1];  
@@ -959,7 +916,6 @@ void FLASH_Write_Record( uint8_t wp[] )
         flash_green();
         
         SEGGER_RTT_printf(0, "TH:%d VB:%d\r\n", heartbeat16, battery_level8);
-        //NRF_LOG_HEXDUMP_DEBUG((uint8_t *)flash_page_buffer, 256);
         
         //flush to memory.... 
         FLASH_Page_Write( GLOB_datastart, flash_page_buffer );  
@@ -969,6 +925,8 @@ void FLASH_Write_Record( uint8_t wp[] )
     
         //clear the buffer  
         memset(flash_page_buffer, 0, sizeof(flash_page_buffer));
+        
+        //and reset the counter
         record_counter = 0; 
     }
   
@@ -976,7 +934,7 @@ void FLASH_Write_Record( uint8_t wp[] )
 
 void add_to_flash( uint16_t counter, uint8_t batt, uint8_t pressure, uint8_t temperature, uint8_t humidity )
 { 
-    //NRF_LOG_INFO("Add_to_flash\r\n");
+
     memset(fb, 0, sizeof(fb));
     
     //timestamp
@@ -1009,7 +967,7 @@ void add_to_flash( uint16_t counter, uint8_t batt, uint8_t pressure, uint8_t tem
 static void update_battery(void)
 {            
     
-    //Battery ADC conversion process
+    //Battery ADC read
     //this will update Current_VBATT() via callback
     nrf_drv_saadc_sample(); 
     
@@ -1018,11 +976,10 @@ static void update_battery(void)
     
     //for debugging let's record the actual voltage
     battery_level8 = (uint8_t)(Current_VBATT() - 300);
- 
+
     SEGGER_RTT_printf(0, "Battery: %d\n", battery_level8);
     
     /*
-     
     //bluetooth update
     
     ret_code_t err_code = NRF_SUCCESS;  
@@ -1037,7 +994,7 @@ static void update_battery(void)
     */
 }
 
-uint8_t batt_cycle = 0;
+
  
 static void update_fast(void)
 {
@@ -1056,19 +1013,20 @@ static void update_fast(void)
         
     //Pressure, Temp, and Humidity
     BME280_Read_PTH(&resultPTH_1[0]);
-    
+    SEGGER_RTT_WriteString(0, "PTH4 ");
     //bluetooth update
     BMP280P8 = (uint8_t)( (resultPTH_1[0]/  10.00) - 10000.0 ); //need to add 1000 to the pressure. 
     BMP280T8 = (uint8_t)( (resultPTH_1[1]/  10.00) - 200.0   ); //need to add 20 to the temp
     BMP280H8 = (uint8_t)( (resultPTH_1[2]/1000.00)           );
-        
+    SEGGER_RTT_WriteString(0, "PTH5 ");    
+    
     //NRF_LOG_DEBUG("TO:%d\r\n",(uint16_t)(resultPTH_1[1]/10.00));
     //NRF_LOG_DEBUG("P:%d\r\n",BMP280P8);
     //NRF_LOG_DEBUG("T:%d\r\n",BMP280T8);
     //NRF_LOG_DEBUG("H:%d\r\n",BMP280H8);
     
     add_to_flash( heartbeat16, battery_level8, BMP280P8, BMP280T8, BMP280H8 );    
-    
+    SEGGER_RTT_WriteString(0, "PTH6.\n"); 
     /*
     ret_code_t err_code = NRF_SUCCESS;
     err_code = ble_hrs_heart_rate_measurement_send_3(&m_hrs, BMP280P, BMP280T, BMP280H);
@@ -1087,6 +1045,7 @@ static void update_fast(void)
 static void timeout_handler(void * p_context)
 {
     UNUSED_PARAMETER(p_context);
+    SEGGER_RTT_WriteString(0, "TH.\n"); 
     flash_green();
     update_fast();
 }
@@ -1095,9 +1054,9 @@ int main(void)
 {
     SEGGER_RTT_WriteString(0, "\n\n***********\n");
     
-    bool erase_bonds;
+    //bool erase_bonds;
 
-    log_init();    
+    //log_init();    
     RTC1_timer_init();
     leds_init();
     
@@ -1115,27 +1074,22 @@ int main(void)
     
     //ADC subsystem 
     ADC_init();
-    //NRF_LOG_DEBUG("ADC_init()\r\n");
         
     //I2C bus. 
     I2C_init();
-    //NRF_LOG_DEBUG("I2C_init\r\n");
     
     //BME280 init. 
     BME280_Turn_On();
-    //NRF_LOG_DEBUG("BME_280_set_up\r\n");
     
     //Flash memory
     FLASH_Init();
-    //NRF_LOG_DEBUG("FLASH_init\r\n");
     
-    //NRF_LOG_DEBUG("F1\r\n");
     FLASH_Get_ID();
+    
     nrf_delay_ms(500);
     
     //FLASH_Reset();    
     //FLASH_Erase();
-    //NRF_LOG_DEBUG("FLASH: Erase\r\n");
     
     GLOB_datastart = FLASH_Get_First_Available_Location();
     SEGGER_RTT_printf(0, "First empty page: %d\r\n", GLOB_datastart);
@@ -1152,42 +1106,14 @@ int main(void)
        
     RTC1_timer_start();
     //advertising_start(erase_bonds);
-    
+     
     while( 1 ) 
     {
- 
+        __WFE();
     };
      
     /*
-        __SEV();
-        __WFE();
-        __WFE();
-        
-        flash_green();
-        nrf_delay_ms(000);
-       
-        NRF_LOG_DEBUG("TICK\r\n");
-        NRF_LOG_FLUSH();
-        
-        flash_red();
-
-        update_fast();
-        
-        if ( batt_cycle > 3 ) 
-        {
-            update_battery();
-            batt_cycle = 0;
-        } 
-        else 
-        {
-            batt_cycle++;
-        };
-        
-        nrf_delay_ms(1000);
-
-        FLASH_uninit();
-
-        for (;;)
+    for (;;)
         {
             if (NRF_LOG_PROCESS() == false)
             {

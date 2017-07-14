@@ -1,4 +1,5 @@
 _build/nrf52832_xxaa_BME280.c.o: /Users/janliphardt/GH_MENTAID//BME280.c \
+ /Users/janliphardt/GH_MENTAID//BME280.h \
  /Users/janliphardt/GH_MENTAID//I2C.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/twi_master/nrf_drv_twi.h \
  /ARM/nRF5_SDK_13//components/libraries/util/nordic_common.h \
@@ -49,20 +50,15 @@ _build/nrf52832_xxaa_BME280.c.o: /Users/janliphardt/GH_MENTAID//BME280.c \
  /ARM/nRF5_SDK_13//components/libraries/util/sdk_errors.h \
  /ARM/nRF5_SDK_13//components/libraries/util/nordic_common.h \
  /ARM/nRF5_SDK_13//components/libraries/util/app_error_weak.h \
- /ARM/nRF5_SDK_13//components/libraries/log/nrf_log.h \
- /ARM/nRF5_SDK_13//components/libraries/util/sdk_common.h \
- /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/string.h \
- /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/sys/string.h \
- /ARM/nRF5_SDK_13//components/device/compiler_abstraction.h \
- /ARM/nRF5_SDK_13//components/libraries/util/sdk_os.h \
- /ARM/nRF5_SDK_13//components/libraries/util/app_util.h \
- /ARM/nRF5_SDK_13//components/libraries/util/sdk_macros.h \
- /ARM/nRF5_SDK_13//components/libraries/log/src/nrf_log_internal.h \
- /ARM/nRF5_SDK_13//components/libraries/util/app_util.h \
- /Users/janliphardt/GH_MENTAID//BME280.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/delay/nrf_delay.h \
- /ARM/nRF5_SDK_13//components/libraries/log/nrf_log_ctrl.h \
- /ARM/nRF5_SDK_13//components/libraries/log/src/nrf_log_ctrl_internal.h
+ /ARM/nRF5_SDK_13//external/segger_rtt/SEGGER_RTT.h \
+ /ARM/nRF5_SDK_13//external/segger_rtt/SEGGER_RTT_Conf.h \
+ /ARM/nRF5_SDK_13//components/device/compiler_abstraction.h \
+ /ARM/nRF5_SDK_13//components/libraries/util/app_util_platform.h \
+ /ARM/nRF5_SDK_13//components/libraries/util/nrf_assert.h \
+ /ARM/nRF5_SDK_13//components/libraries/util/app_error.h
+
+/Users/janliphardt/GH_MENTAID//BME280.h:
 
 /Users/janliphardt/GH_MENTAID//I2C.h:
 
@@ -164,30 +160,16 @@ _build/nrf52832_xxaa_BME280.c.o: /Users/janliphardt/GH_MENTAID//BME280.c \
 
 /ARM/nRF5_SDK_13//components/libraries/util/app_error_weak.h:
 
-/ARM/nRF5_SDK_13//components/libraries/log/nrf_log.h:
+/ARM/nRF5_SDK_13//components/drivers_nrf/delay/nrf_delay.h:
 
-/ARM/nRF5_SDK_13//components/libraries/util/sdk_common.h:
+/ARM/nRF5_SDK_13//external/segger_rtt/SEGGER_RTT.h:
 
-/ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/string.h:
-
-/ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/sys/string.h:
+/ARM/nRF5_SDK_13//external/segger_rtt/SEGGER_RTT_Conf.h:
 
 /ARM/nRF5_SDK_13//components/device/compiler_abstraction.h:
 
-/ARM/nRF5_SDK_13//components/libraries/util/sdk_os.h:
+/ARM/nRF5_SDK_13//components/libraries/util/app_util_platform.h:
 
-/ARM/nRF5_SDK_13//components/libraries/util/app_util.h:
+/ARM/nRF5_SDK_13//components/libraries/util/nrf_assert.h:
 
-/ARM/nRF5_SDK_13//components/libraries/util/sdk_macros.h:
-
-/ARM/nRF5_SDK_13//components/libraries/log/src/nrf_log_internal.h:
-
-/ARM/nRF5_SDK_13//components/libraries/util/app_util.h:
-
-/Users/janliphardt/GH_MENTAID//BME280.h:
-
-/ARM/nRF5_SDK_13//components/drivers_nrf/delay/nrf_delay.h:
-
-/ARM/nRF5_SDK_13//components/libraries/log/nrf_log_ctrl.h:
-
-/ARM/nRF5_SDK_13//components/libraries/log/src/nrf_log_ctrl_internal.h:
+/ARM/nRF5_SDK_13//components/libraries/util/app_error.h:

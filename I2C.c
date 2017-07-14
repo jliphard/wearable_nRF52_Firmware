@@ -6,7 +6,7 @@
 
 // I2C instance.
 #define TWI_INSTANCE_ID 0
-#define APP_IRQ_PRIORITY_HIGH 1 //overrides definition elsewhere
+#define APP_IRQ_PRIORITY_LOW 3  //overrides definition elsewhere
 #define BA_SDA_PIN      5       // SDA signal pin
 #define BA_SCL_PIN      8       // SCL signal pin
 
@@ -27,7 +27,7 @@ void I2C_init(void)
        .scl                = BA_SCL_PIN,
        .sda                = BA_SDA_PIN,
        .frequency          = NRF_TWI_FREQ_100K,
-       .interrupt_priority = APP_IRQ_PRIORITY_HIGH,
+       .interrupt_priority = APP_IRQ_PRIORITY_LOW,
        .clear_bus_init     = false
     };
 
@@ -92,12 +92,14 @@ void I2C_handler(nrf_drv_twi_evt_t const * p_event, void * p_context)
     switch (p_event->type)
     {
         case NRF_DRV_TWI_EVT_DONE:
+            
+            m_xfer_done = true;
+            
             if (p_event->xfer_desc.type == NRF_DRV_TWI_XFER_RX)
             {
                 //can do stuff here if needed
-                //not clear how all of this is working
             }
-            m_xfer_done = true;
+            
             //NRF_LOG_DEBUG("I2C_handler responding to NRF_DRV_TWI_EVT_DONE\r\n");
             break;
         default:

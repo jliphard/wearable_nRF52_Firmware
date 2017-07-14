@@ -48,17 +48,7 @@ _build/nrf52832_xxaa_I2C.c.o: /Users/janliphardt/GH_MENTAID//I2C.c \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/sys/stdio.h \
  /ARM/nRF5_SDK_13//components/libraries/util/sdk_errors.h \
  /ARM/nRF5_SDK_13//components/libraries/util/nordic_common.h \
- /ARM/nRF5_SDK_13//components/libraries/util/app_error_weak.h \
- /ARM/nRF5_SDK_13//components/libraries/log/nrf_log.h \
- /ARM/nRF5_SDK_13//components/libraries/util/sdk_common.h \
- /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/string.h \
- /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/sys/string.h \
- /ARM/nRF5_SDK_13//components/device/compiler_abstraction.h \
- /ARM/nRF5_SDK_13//components/libraries/util/sdk_os.h \
- /ARM/nRF5_SDK_13//components/libraries/util/app_util.h \
- /ARM/nRF5_SDK_13//components/libraries/util/sdk_macros.h \
- /ARM/nRF5_SDK_13//components/libraries/log/src/nrf_log_internal.h \
- /ARM/nRF5_SDK_13//components/libraries/util/app_util.h
+ /ARM/nRF5_SDK_13//components/libraries/util/app_error_weak.h
 
 /Users/janliphardt/GH_MENTAID//I2C.h:
 
@@ -159,23 +149,3 @@ _build/nrf52832_xxaa_I2C.c.o: /Users/janliphardt/GH_MENTAID//I2C.c \
 /ARM/nRF5_SDK_13//components/libraries/util/nordic_common.h:
 
 /ARM/nRF5_SDK_13//components/libraries/util/app_error_weak.h:
-
-/ARM/nRF5_SDK_13//components/libraries/log/nrf_log.h:
-
-/ARM/nRF5_SDK_13//components/libraries/util/sdk_common.h:
-
-/ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/string.h:
-
-/ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/sys/string.h:
-
-/ARM/nRF5_SDK_13//components/device/compiler_abstraction.h:
-
-/ARM/nRF5_SDK_13//components/libraries/util/sdk_os.h:
-
-/ARM/nRF5_SDK_13//components/libraries/util/app_util.h:
-
-/ARM/nRF5_SDK_13//components/libraries/util/sdk_macros.h:
-
-/ARM/nRF5_SDK_13//components/libraries/log/src/nrf_log_internal.h:
-
-/ARM/nRF5_SDK_13//components/libraries/util/app_util.h:

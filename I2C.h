@@ -8,8 +8,7 @@ extern "C" {
 
     #include "nrf_drv_twi.h"
     #include "app_error.h" //for APP_ERROR_CHECK(err_code);
-    #include "nrf_log.h"   //for NRF_LOG_DEBUG
-    
+
     void I2C_init(void);
     void writeByte(uint8_t address, uint8_t subAddress, uint8_t data);
     void readBytes(uint8_t address, uint8_t subAddress, uint8_t count, uint8_t * dest);

@@ -15,4 +15,10 @@
             <file>file:/Users/janliphardt/GH_MENTAID/main.c</file>
         </group>
     </open-files>
+    <preferences xmlns="http://www.netbeans.org/ns/auxiliary-configuration-preferences/1">
+        <module name="org-netbeans-modules-cnd-discovery">
+            <property name="rootFolder" value="/Users/janliphardt/GH_MENTAID"/>
+            <property name="exec-log-file" value="/Users/janliphardt/GH_MENTAID/pca10040/s132/armgcc/_build/nrf52832_xxaa.out"/>
+        </module>
+    </preferences>
 </project-private>
