@@ -2,8 +2,8 @@ PROJECT_NAME     := mentaid
 TARGETS          := nrf52832_xxaa
 OUTPUT_DIRECTORY := _build
 
-SDK_ROOT := ../../../../../..
-PROJ_DIR := ../../..
+SDK_ROOT := /ARM/nRF5_SDK_13/
+PROJ_DIR := /Users/janliphardt/GH_MENTAID/
 
 $(OUTPUT_DIRECTORY)/nrf52832_xxaa.out: \
   LINKER_SCRIPT  := mentaid.ld
