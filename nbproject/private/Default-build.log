@@ -1,0 +1,139 @@
+mkdir _build
+Compiling file: boards.c
+Compiling file: main.c
+../../../main.c: In function 'main':
+../../../main.c:1249:5: warning: implicit declaration of function 'SEGGER_RTT_WriteString' [-Wimplicit-function-declaration]
+     SEGGER_RTT_WriteString(0, "\n\n***********\n");
+     ^~~~~~~~~~~~~~~~~~~~~~
+../../../main.c:1251:10: warning: unused variable 'erase_bonds' [-Wunused-variable]
+     bool erase_bonds;
+          ^~~~~~~~~~~
+At top level:
+../../../main.c:1162:13: warning: 'update_battery' defined but not used [-Wunused-function]
+ static void update_battery(void)
+             ^~~~~~~~~~~~~~
+../../../main.c:976:13: warning: 'power_manage' defined but not used [-Wunused-function]
+ static void power_manage(void)
+             ^~~~~~~~~~~~
+../../../main.c:952:13: warning: 'buttons_leds_init' defined but not used [-Wunused-function]
+ static void buttons_leds_init(bool * p_erase_bonds)
+             ^~~~~~~~~~~~~~~~~
+../../../main.c:922:13: warning: 'advertising_init' defined but not used [-Wunused-function]
+ static void advertising_init(void)
+             ^~~~~~~~~~~~~~~~
+../../../main.c:888:13: warning: 'peer_manager_init' defined but not used [-Wunused-function]
+ static void peer_manager_init(void)
+             ^~~~~~~~~~~~~~~~~
+../../../main.c:792:13: warning: 'ble_stack_init' defined but not used [-Wunused-function]
+ static void ble_stack_init(void)
+             ^~~~~~~~~~~~~~
+../../../main.c:593:13: warning: 'conn_params_init' defined but not used [-Wunused-function]
+ static void conn_params_init(void)
+             ^~~~~~~~~~~~~~~~
+../../../main.c:503:13: warning: 'ble_services_init' defined but not used [-Wunused-function]
+ static void ble_services_init(void)
+             ^~~~~~~~~~~~~~~~~
+../../../main.c:492:13: warning: 'gatt_init' defined but not used [-Wunused-function]
+ static void gatt_init(void)
+             ^~~~~~~~~
+../../../main.c:447:13: warning: 'gap_params_init' defined but not used [-Wunused-function]
+ static void gap_params_init(void)
+             ^~~~~~~~~~~~~~~
+../../../main.c:430:13: warning: 'RTC1_timer_stop' defined but not used [-Wunused-function]
+ static void RTC1_timer_stop(void)
+             ^~~~~~~~~~~~~~~
+Compiling file: I2C.c
+../../../I2C.c:5:0: warning: "NRF_LOG_MODULE_NAME" redefined
+ #define NRF_LOG_MODULE_NAME "I2C"
+ 
+In file included from ../../../I2C.h:11:0,
+                 from ../../../I2C.c:2:
+../../../../../../components/libraries/log/nrf_log.h:70:0: note: this is the location of the previous definition
+     #define NRF_LOG_MODULE_NAME ""
+ 
+Compiling file: BME280.c
+../../../BME280.c:6:0: warning: "NRF_LOG_MODULE_NAME" redefined
+ #define NRF_LOG_MODULE_NAME "BME"
+ 
+In file included from ../../../I2C.h:11:0,
+                 from ../../../BME280.c:2:
+../../../../../../components/libraries/log/nrf_log.h:70:0: note: this is the location of the previous definition
+     #define NRF_LOG_MODULE_NAME ""
+ 
+Compiling file: ADC.c
+Compiling file: SPIFlash.c
+../../../SPIFlash.c:10:0: warning: "NRF_LOG_MODULE_NAME" redefined
+ #define NRF_LOG_MODULE_NAME "FLASH"
+ 
+In file included from ../../../SPIFlash.c:7:0:
+../../../../../../components/libraries/log/nrf_log.h:70:0: note: this is the location of the previous definition
+     #define NRF_LOG_MODULE_NAME ""
+ 
+Compiling file: nrf_log_backend_serial.c
+Compiling file: nrf_log_frontend.c
+Compiling file: app_button.c
+Compiling file: app_scheduler.c
+Compiling file: app_timer.c
+Compiling file: crc16.c
+Compiling file: fds.c
+Compiling file: fstorage.c
+Compiling file: hardfault_implementation.c
+Compiling file: nrf_strerror.c
+Compiling file: sensorsim.c
+Compiling file: app_error.c
+Compiling file: app_error_weak.c
+Compiling file: app_util_platform.c
+Compiling file: nrf_assert.c
+Compiling file: sdk_mapped_flags.c
+Compiling file: bsp.c
+Compiling file: bsp_btn_ble.c
+Compiling file: bsp_nfc.c
+Compiling file: nrf_queue.c
+Compiling file: nrf_spi_mngr.c
+Compiling file: nrf_drv_spi.c
+Compiling file: nrf_drv_clock.c
+Compiling file: nrf_drv_common.c
+Compiling file: nrf_drv_gpiote.c
+Compiling file: nrf_drv_twi.c
+Compiling file: nrf_drv_uart.c
+Compiling file: nrf_drv_saadc.c
+Compiling file: nrf_saadc.c
+Compiling file: nrf_drv_ppi.c
+Compiling file: nrf_drv_timer.c
+Compiling file: ble_advertising.c
+Compiling file: ble_advdata.c
+Compiling file: ble_conn_params.c
+Compiling file: ble_conn_state.c
+Compiling file: ble_srv_common.c
+Compiling file: gatt_cache_manager.c
+Compiling file: gatts_cache_manager.c
+Compiling file: id_manager.c
+Compiling file: nrf_ble_gatt.c
+Compiling file: peer_data_storage.c
+Compiling file: peer_database.c
+Compiling file: peer_id.c
+Compiling file: peer_manager.c
+Compiling file: pm_buffer.c
+Compiling file: pm_mutex.c
+Compiling file: security_dispatcher.c
+Compiling file: security_manager.c
+Compiling file: ble_bas.c
+Compiling file: ble_dis.c
+Compiling file: ble_hrs.c
+../../../../../../components/ble/ble_services/ble_hrs/ble_hrs.c: In function 'hrm_encode_3':
+../../../../../../components/ble/ble_services/ble_hrs/ble_hrs.c:229:13: warning: unused variable 'i' [-Wunused-variable]
+     int     i;
+             ^
+Compiling file: softdevice_handler.c
+Assembling file: gcc_startup_nrf52.S
+Compiling file: system_nrf52.c
+Compiling file: RTT_Syscalls_GCC.c
+Compiling file: SEGGER_RTT.c
+Compiling file: SEGGER_RTT_printf.c
+Linking target: _build/nrf52832_xxaa.out
+
+   text	   data	    bss	    dec	    hex	filename
+  51332	    516	  19848	  71696	  11810	_build/nrf52832_xxaa.out
+
+Preparing: _build/nrf52832_xxaa.hex
+Preparing: _build/nrf52832_xxaa.bin
