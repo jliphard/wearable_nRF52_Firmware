@@ -14,5 +14,7 @@ _Goal 1_ - Baseline/robust datalogging
 *Sleep for most of the time (i.e. between the sampling events)
 *Do that until it drains the battery. 
 
-_Goal 2_ - Upon system start, advertize BLE for 100 secs. If connect, then allow iOS BLE app to send commands, such as Erase Memory, or Upload all data. 
+_Goal 2_ - Minimal BLE functionality. Upon system start, advertize BLE for 100 secs. If connect, then allow iOS BLE app to send commands, such as Erase Memory, or Upload all data. If not connect, just datalog as in use case 1. One connection drops, begin to datalog.
+
+_Goal 3_ - Get good time/date/location from iPhone.
 
