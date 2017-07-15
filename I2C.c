@@ -115,8 +115,8 @@ void readBytes(uint8_t address, uint8_t subAddress, uint8_t count, uint8_t * des
     //readBytes(BME280_ADDRESS_1, BME280_PRESS_MSB, 9, &rawData[0]);  
     
     m_xfer_done = false;
-    err_code = nrf_drv_twi_tx(&i2c, address, subAddress, 1, true);
-    while (m_xfer_done == false) {};
+    //err_code = nrf_drv_twi_tx(&i2c, address, subAddress, 1, true);
+    //while (m_xfer_done == false) {};
     
     //comes back with error code
     //SEGGER_RTT_printf(0, "ReadBytes code: %d\n", err_code);
@@ -127,10 +127,10 @@ void readBytes(uint8_t address, uint8_t subAddress, uint8_t count, uint8_t * des
     {
         m_xfer_done = false;
         //NRF_LOG_DEBUG("readBytes - Reading\r\n");
-        err_code = nrf_drv_twi_rx(&i2c, address, dest, count);
+        //err_code = nrf_drv_twi_rx(&i2c, address, dest, count);
         //SEGGER_RTT_printf(0, "ReadBytes RX code: %d\n", err_code);
         //APP_ERROR_CHECK(err_code);
-        while (m_xfer_done == false) {};
+        //while (m_xfer_done == false) {};
     };
 
     //NRF_LOG_DEBUG("readBytes done\r\n");

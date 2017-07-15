@@ -37,7 +37,8 @@ enum SBy  {t_00_5ms = 0, t_62_5ms, t_125ms, t_250ms, t_500ms, t_1000ms, t_10ms, 
 uint8_t calib[26];
   
 //from read PTH
-uint8_t rawData[8];  // 20-bit pressure register data stored here
+static uint8_t rawData[8];  // 20-bit pressure register data stored here
+
 int32_t result[3];
 int32_t var1, var2, t_fine, adc_T;
 
@@ -135,7 +136,7 @@ void BME280_Read_PTH(int32_t * resultPTH)
   //Pressure
   result[0] = (int32_t) (((uint32_t) rawData[0] << 16 | (uint32_t) rawData[1] << 8 | rawData[2]) >> 4);
   result[1] = (int32_t) (((uint32_t) rawData[3] << 16 | (uint32_t) rawData[4] << 8 | rawData[5]) >> 4);
-  result[2] = (int16_t) (((uint16_t) rawData[6] << 8 | rawData[7]) );
+  result[2] = (int16_t) (((uint16_t) rawData[6] <<  8 |            rawData[7]) );
   
   //SEGGER_RTT_WriteString(0, " PTH2 ");
   
