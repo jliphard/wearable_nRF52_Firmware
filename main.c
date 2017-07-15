@@ -918,10 +918,10 @@ void FLASH_Write_Record( uint8_t wp[] )
         SEGGER_RTT_printf(0, "TH:%d VB:%d\r\n", heartbeat16, battery_level8);
         
         //flush to memory.... 
-        FLASH_Page_Write( GLOB_datastart, flash_page_buffer );  
+        //FLASH_Page_Write( GLOB_datastart, flash_page_buffer );  
      
         //advance counter  
-        GLOB_datastart++;
+        //GLOB_datastart++;
     
         //clear the buffer  
         memset(flash_page_buffer, 0, sizeof(flash_page_buffer));
@@ -1010,7 +1010,7 @@ static void update_fast(void)
     heartbeat16++;
         
     //Pressure, Temp, and Humidity
-    BME280_Read_PTH(&resultPTH_1[0]);
+    //BME280_Read_PTH(&resultPTH_1[0]);
     //SEGGER_RTT_WriteString(0, "PTH4 ");
     
     //bluetooth update
