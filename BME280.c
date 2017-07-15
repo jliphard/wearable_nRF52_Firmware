@@ -147,9 +147,9 @@ void BME280_Read_PTH(int32_t * resultPTH)
   
   t_fine = var1 + var2;
   
-  resultPTH[0] = result[0]; //BME280_Compensate_P(result[0], t_fine);
-  resultPTH[1] = t_fine;    //BME280_Compensate_T(           t_fine);
-  resultPTH[2] = result[2]; //BME280_Compensate_H(result[2], t_fine);
+  resultPTH[0] = BME280_Compensate_P(result[0], t_fine);
+  resultPTH[1] = BME280_Compensate_T(           t_fine);
+  resultPTH[2] = BME280_Compensate_H(result[2], t_fine);
   
   //SEGGER_RTT_WriteString(0, "PTH3.\n");
      
