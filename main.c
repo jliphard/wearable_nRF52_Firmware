@@ -977,7 +977,7 @@ static void update_battery(void)
     //for debugging let's record the actual voltage
     battery_level8 = (uint8_t)(Current_VBATT() - 300);
 
-    SEGGER_RTT_printf(0, "Battery: %d\n", battery_level8);
+    //SEGGER_RTT_printf(0, "Battery: %d\n", battery_level8);
     
     /*
     //bluetooth update
@@ -994,12 +994,10 @@ static void update_battery(void)
     */
 }
 
-
- 
 static void update_fast(void)
 {
 
-    SEGGER_RTT_WriteString(0, "Update fast.\n");
+    //SEGGER_RTT_WriteString(0, "Update fast.\n");
 
     if ( batt_cycle > 3 ) 
     {
@@ -1013,12 +1011,13 @@ static void update_fast(void)
         
     //Pressure, Temp, and Humidity
     BME280_Read_PTH(&resultPTH_1[0]);
-    SEGGER_RTT_WriteString(0, "PTH4 ");
+    //SEGGER_RTT_WriteString(0, "PTH4 ");
+    
     //bluetooth update
     BMP280P8 = (uint8_t)( (resultPTH_1[0]/  10.00) - 10000.0 ); //need to add 1000 to the pressure. 
     BMP280T8 = (uint8_t)( (resultPTH_1[1]/  10.00) - 200.0   ); //need to add 20 to the temp
     BMP280H8 = (uint8_t)( (resultPTH_1[2]/1000.00)           );
-    SEGGER_RTT_WriteString(0, "PTH5 ");    
+    //SEGGER_RTT_WriteString(0, "PTH5 ");    
     
     //NRF_LOG_DEBUG("TO:%d\r\n",(uint16_t)(resultPTH_1[1]/10.00));
     //NRF_LOG_DEBUG("P:%d\r\n",BMP280P8);
@@ -1026,7 +1025,7 @@ static void update_fast(void)
     //NRF_LOG_DEBUG("H:%d\r\n",BMP280H8);
     
     add_to_flash( heartbeat16, battery_level8, BMP280P8, BMP280T8, BMP280H8 );    
-    SEGGER_RTT_WriteString(0, "PTH6.\n"); 
+    //SEGGER_RTT_WriteString(0, "PTH6.\n"); 
     /*
     ret_code_t err_code = NRF_SUCCESS;
     err_code = ble_hrs_heart_rate_measurement_send_3(&m_hrs, BMP280P, BMP280T, BMP280H);
@@ -1045,7 +1044,7 @@ static void update_fast(void)
 static void timeout_handler(void * p_context)
 {
     UNUSED_PARAMETER(p_context);
-    SEGGER_RTT_WriteString(0, "TH.\n"); 
+    //SEGGER_RTT_WriteString(0, "TH.\n"); 
     flash_green();
     update_fast();
 }

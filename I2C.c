@@ -93,11 +93,12 @@ void I2C_handler(nrf_drv_twi_evt_t const * p_event, void * p_context)
     {
         case NRF_DRV_TWI_EVT_DONE:
             
+            //todo -difference between read and write???
             m_xfer_done = true;
             
             if (p_event->xfer_desc.type == NRF_DRV_TWI_XFER_RX)
             {
-                //can do stuff here if needed
+                //SEGGER_RTT_WriteString(0, "Data just came back!\n");  
             }
             
             //NRF_LOG_DEBUG("I2C_handler responding to NRF_DRV_TWI_EVT_DONE\r\n");
@@ -110,23 +111,28 @@ void I2C_handler(nrf_drv_twi_evt_t const * p_event, void * p_context)
 void readBytes(uint8_t address, uint8_t subAddress, uint8_t count, uint8_t * dest)
 {
     ret_code_t err_code = 0;
+    //0xF7 to 0xFE (temperature, pressure and humidity)
+    //readBytes(BME280_ADDRESS_1, BME280_PRESS_MSB, 9, &rawData[0]);  
     
     m_xfer_done = false;
-    //NRF_LOG_DEBUG("readBytes - Writing\r\n");
-    err_code = nrf_drv_twi_tx(&i2c, address, &subAddress, 1, true);
+    err_code = nrf_drv_twi_tx(&i2c, address, subAddress, 1, true);
+    while (m_xfer_done == false) {};
+    
     //comes back with error code
-    APP_ERROR_CHECK(err_code);
-    while (m_xfer_done == false);
+    //SEGGER_RTT_printf(0, "ReadBytes code: %d\n", err_code);
+    //here is the problem????
+    //APP_ERROR_CHECK(err_code);
     
     if (err_code == NRF_SUCCESS)
     {
         m_xfer_done = false;
         //NRF_LOG_DEBUG("readBytes - Reading\r\n");
         err_code = nrf_drv_twi_rx(&i2c, address, dest, count);
+        //SEGGER_RTT_printf(0, "ReadBytes RX code: %d\n", err_code);
         //APP_ERROR_CHECK(err_code);
-        while (m_xfer_done == false);
+        while (m_xfer_done == false) {};
     };
-    
+
     //NRF_LOG_DEBUG("readBytes done\r\n");
     //NRF_LOG_FLUSH();
 }

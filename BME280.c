@@ -6,14 +6,18 @@
 
 // BME280 registers
 #define BME280_ID         0xD0
-#define BME280_HUM_LSB    0xFE
-#define BME280_HUM_MSB    0xFD
-#define BME280_TEMP_XLSB  0xFC
-#define BME280_TEMP_LSB   0xFB
-#define BME280_TEMP_MSB   0xFA
-#define BME280_PRESS_XLSB 0xF9
-#define BME280_PRESS_LSB  0xF8
+
 #define BME280_PRESS_MSB  0xF7
+#define BME280_PRESS_LSB  0xF8
+#define BME280_PRESS_XLSB 0xF9
+
+#define BME280_TEMP_MSB   0xFA
+#define BME280_TEMP_LSB   0xFB
+#define BME280_TEMP_XLSB  0xFC
+
+#define BME280_HUM_MSB    0xFD
+#define BME280_HUM_LSB    0xFE
+
 #define BME280_CONFIG     0xF5
 #define BME280_CTRL_MEAS  0xF4
 #define BME280_STATUS     0xF3
@@ -32,6 +36,15 @@ enum SBy  {t_00_5ms = 0, t_62_5ms, t_125ms, t_250ms, t_500ms, t_1000ms, t_10ms, 
 // Read and store calibration data
 uint8_t calib[26];
   
+//from read PTH
+uint8_t rawData[8];  // 20-bit pressure register data stored here
+int32_t result[3];
+int32_t var1, var2, t_fine, adc_T;
+
+//from Pressure comp
+int32_t varP1, varP2;
+uint32_t P;
+    
 // BME280 compensation parameters
 uint8_t  dig_H1, dig_H3, dig_H6;
 uint16_t dig_T1, dig_P1, dig_H4, dig_H5;
@@ -46,7 +59,6 @@ uint8_t Posr = P_OSR_16, Hosr = H_OSR_16, Tosr = T_OSR_02, Mode = normal, IIRFil
 // * @brief Function for setting active
 void BME280_Turn_On(void)
 {
-    
     uint8_t e = readByte(BME280_ADDRESS_1, BME280_ID);
     
     //NRF_LOG_DEBUG("BME_280_set_mode: readByte returned e: %d\r\n", e);
@@ -62,7 +74,6 @@ void BME280_Turn_On(void)
     else {
         //NRF_LOG_DEBUG("BMP280 not responding\r\n");
     }
-
 }
 
 void BME280_Configure( uint8_t address )
@@ -77,9 +88,7 @@ void BME280_Configure( uint8_t address )
   
   // Set standby time interval in normal mode and bandwidth
   writeByte(address, BME280_CONFIG, SBy << 5 | IIRFilter << 2);
-  
 
-  
   readBytes(address, BME280_CALIB00, 26, &calib[0]);
   
   dig_T1 = (uint16_t)(((uint16_t) calib[ 1] << 8) | calib[ 0]);
@@ -118,34 +127,31 @@ void BME280_Configure( uint8_t address )
 
 void BME280_Read_PTH(int32_t * resultPTH)
 {
-  uint8_t rawData[9];  // 20-bit pressure register data stored here
-  int32_t result[3];
-  int32_t var1, var2, t_fine;
+
+  //SEGGER_RTT_WriteString(0, "Read PTH1 ");
   
-  SEGGER_RTT_WriteString(0, "Read PTH1 ");
-  
-  readBytes(BME280_ADDRESS_1, BME280_PRESS_MSB, 9, &rawData[0]);  
+  readBytes(BME280_ADDRESS_1, BME280_PRESS_MSB, 8, &rawData[0]);  
   
   //Pressure
   result[0] = (int32_t) (((uint32_t) rawData[0] << 16 | (uint32_t) rawData[1] << 8 | rawData[2]) >> 4);
   result[1] = (int32_t) (((uint32_t) rawData[3] << 16 | (uint32_t) rawData[4] << 8 | rawData[5]) >> 4);
   result[2] = (int16_t) (((uint16_t) rawData[6] << 8 | rawData[7]) );
   
-  SEGGER_RTT_WriteString(0, " PTH2 ");
+  //SEGGER_RTT_WriteString(0, " PTH2 ");
   
   //Need t_fine for all three compensations
-  int32_t adc_T = result[1];
+  adc_T = result[1];
   
   var1 = (((( adc_T >> 3) - ((int32_t)dig_T1 << 1))) * ((int32_t)dig_T2)) >> 11;
   var2 = (((((adc_T >> 4) - ((int32_t)dig_T1)) * ((adc_T >> 4) - ((int32_t)dig_T1))) >> 12) * ((int32_t)dig_T3)) >> 14;
   
   t_fine = var1 + var2;
   
-  resultPTH[0] = BME280_Compensate_P(result[0], t_fine);
-  resultPTH[1] = BME280_Compensate_T(           t_fine);
-  resultPTH[2] = BME280_Compensate_H(result[2], t_fine);
+  resultPTH[0] = result[0]; //BME280_Compensate_P(result[0], t_fine);
+  resultPTH[1] = t_fine;    //BME280_Compensate_T(           t_fine);
+  resultPTH[2] = result[2]; //BME280_Compensate_H(result[2], t_fine);
   
-  SEGGER_RTT_WriteString(0, "PTH3.\n");
+  //SEGGER_RTT_WriteString(0, "PTH3.\n");
      
 }  
 
@@ -153,15 +159,15 @@ void BME280_Read_PTH(int32_t * resultPTH)
 // Output value of “47445”represents 47445/1024= 46.333%RH
 uint32_t BME280_Compensate_H(int32_t adc_H, int32_t t_fine)
 {
-  int32_t var;
-  var = (t_fine - ((int32_t)76800));
-  var = (((((adc_H << 14) - (((int32_t)dig_H4) << 20) - (((int32_t)dig_H5) * var)) +
-    ((int32_t)16384)) >> 15) * (((((((var * ((int32_t)dig_H6)) >> 10) * (((var *
+  int32_t varH;
+  varH = (t_fine - ((int32_t)76800));
+  varH = (((((adc_H << 14) - (((int32_t)dig_H4) << 20) - (((int32_t)dig_H5) * varH)) +
+    ((int32_t)16384)) >> 15) * (((((((varH * ((int32_t)dig_H6)) >> 10) * (((varH *
     ((int32_t)dig_H3)) >> 11) + ((int32_t)32768))) >> 10) + ((int32_t)2097152)) * ((int32_t)dig_H2) + 8192) >> 14));
-  var = (var - (((((var >> 15) * (var >> 15)) >> 7) * ((int32_t)dig_H1)) >> 4));
-  var = (var < 0 ? 0 : var); 
-  var = (var > 419430400 ? 419430400 : var);
-  return(uint32_t)(var >> 12);
+  varH = (varH - (((((varH >> 15) * (varH >> 15)) >> 7) * ((int32_t)dig_H1)) >> 4));
+  varH = (varH < 0 ? 0 : varH); 
+  varH = (varH > 419430400 ? 419430400 : varH);
+  return(uint32_t)(varH >> 12);
 }
 
 // Returns temperature in DegC, resolution is 0.01 DegC. Output value of
@@ -179,29 +185,28 @@ int32_t BME280_Compensate_T(int32_t t_fine)
 // Returns pressure in Pa as unsigned 32 bit integer. Output value of “96386” equals 96386 Pa = 963.86 hPa
 uint32_t BME280_Compensate_P(int32_t adc_P, int32_t t_fine) 
 {
-    int32_t var1, var2;
-    uint32_t P;
-    var1 = (t_fine>>1) - (int32_t)64000;
-    var2 = (((var1>>2) * (var1>>2)) >> 11 ) * ((int32_t)dig_P6);
-    var2 = var2 + ((var1*((int32_t)dig_P5))<<1);
-    var2 = (var2>>2)+(((int32_t)dig_P4)<<16);
-    var1 = (((dig_P3 * (((var1>>2) * (var1>>2)) >> 13 )) >> 3) + ((((int32_t)dig_P2) * var1)>>1))>>18; var1 =((((32768+var1))*((int32_t)dig_P1))>>15);
-    if (var1 == 0) 
+    varP1 = (t_fine>>1) - (int32_t)64000;
+    varP2 = (((varP1>>2) * (varP1>>2)) >> 11 ) * ((int32_t)dig_P6);
+    varP2 = varP2 + ((varP1*((int32_t)dig_P5))<<1);
+    varP2 = (varP2>>2)+(((int32_t)dig_P4)<<16);
+    varP1 = (((dig_P3 * (((varP1>>2) * (varP1>>2)) >> 13 )) >> 3) + ((((int32_t)dig_P2) * varP1)>>1))>>18; 
+    varP1 = ((((32768+varP1))*((int32_t)dig_P1))>>15);
+    if (varP1 == 0) 
     {
         return 0; // avoid exception caused by division by zero 
     }
-    P = (((uint32_t)(((int32_t)1048576)-adc_P)-(var2>>12)))*3125; 
+    P = (((uint32_t)(((int32_t)1048576)-adc_P)-(varP2>>12)))*3125; 
     if (P < 0x80000000)
     {
-        P = (P << 1) / ((uint32_t)var1); 
+        P = (P << 1) / ((uint32_t)varP1); 
     }
     else
     {
-        P = (P / (uint32_t)var1) * 2;
+        P = (P / (uint32_t)varP1) * 2;
     }
-    var1 = (((int32_t)dig_P9) * ((int32_t)(((P>>3) * (P>>3))>>13)))>>12; 
-    var2 = (((int32_t)(P>>2)) * ((int32_t)dig_P8))>>13;
-    P = (uint32_t)((int32_t)P + ((var1 + var2 + dig_P7) >> 4));
+    varP1 = (((int32_t)dig_P9) * ((int32_t)(((P>>3) * (P>>3))>>13)))>>12; 
+    varP2 = (((int32_t)(P>>2)) * ((int32_t)dig_P8))>>13;
+    P = (uint32_t)((int32_t)P + ((varP1 + varP2 + dig_P7) >> 4));
     return P;
 }
 

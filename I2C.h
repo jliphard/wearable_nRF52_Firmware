@@ -8,6 +8,7 @@ extern "C" {
 
     #include "nrf_drv_twi.h"
     #include "app_error.h" //for APP_ERROR_CHECK(err_code);
+    #include "SEGGER_RTT.h"
 
     void I2C_init(void);
     void writeByte(uint8_t address, uint8_t subAddress, uint8_t data);

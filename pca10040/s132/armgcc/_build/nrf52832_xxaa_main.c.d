@@ -121,9 +121,9 @@ _build/nrf52832_xxaa_main.c.o: /Users/janliphardt/GH_MENTAID//main.c \
  /Users/janliphardt/GH_MENTAID//I2C.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/twi_master/nrf_drv_twi.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_twi.h \
- /Users/janliphardt/GH_MENTAID//BME280.h \
  /ARM/nRF5_SDK_13//external/segger_rtt/SEGGER_RTT.h \
  /ARM/nRF5_SDK_13//external/segger_rtt/SEGGER_RTT_Conf.h \
+ /Users/janliphardt/GH_MENTAID//BME280.h \
  /Users/janliphardt/GH_MENTAID//ADC.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/saadc/nrf_drv_saadc.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_saadc.h \
@@ -377,11 +377,11 @@ _build/nrf52832_xxaa_main.c.o: /Users/janliphardt/GH_MENTAID//main.c \
 
 /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_twi.h:
 
-/Users/janliphardt/GH_MENTAID//BME280.h:
-
 /ARM/nRF5_SDK_13//external/segger_rtt/SEGGER_RTT.h:
 
 /ARM/nRF5_SDK_13//external/segger_rtt/SEGGER_RTT_Conf.h:
+
+/Users/janliphardt/GH_MENTAID//BME280.h:
 
 /Users/janliphardt/GH_MENTAID//ADC.h:
 

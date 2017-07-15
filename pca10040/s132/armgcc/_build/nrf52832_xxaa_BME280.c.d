@@ -50,13 +50,13 @@ _build/nrf52832_xxaa_BME280.c.o: /Users/janliphardt/GH_MENTAID//BME280.c \
  /ARM/nRF5_SDK_13//components/libraries/util/sdk_errors.h \
  /ARM/nRF5_SDK_13//components/libraries/util/nordic_common.h \
  /ARM/nRF5_SDK_13//components/libraries/util/app_error_weak.h \
- /ARM/nRF5_SDK_13//components/drivers_nrf/delay/nrf_delay.h \
  /ARM/nRF5_SDK_13//external/segger_rtt/SEGGER_RTT.h \
  /ARM/nRF5_SDK_13//external/segger_rtt/SEGGER_RTT_Conf.h \
  /ARM/nRF5_SDK_13//components/device/compiler_abstraction.h \
  /ARM/nRF5_SDK_13//components/libraries/util/app_util_platform.h \
  /ARM/nRF5_SDK_13//components/libraries/util/nrf_assert.h \
- /ARM/nRF5_SDK_13//components/libraries/util/app_error.h
+ /ARM/nRF5_SDK_13//components/libraries/util/app_error.h \
+ /ARM/nRF5_SDK_13//components/drivers_nrf/delay/nrf_delay.h
 
 /Users/janliphardt/GH_MENTAID//BME280.h:
 
@@ -160,8 +160,6 @@ _build/nrf52832_xxaa_BME280.c.o: /Users/janliphardt/GH_MENTAID//BME280.c \
 
 /ARM/nRF5_SDK_13//components/libraries/util/app_error_weak.h:
 
-/ARM/nRF5_SDK_13//components/drivers_nrf/delay/nrf_delay.h:
-
 /ARM/nRF5_SDK_13//external/segger_rtt/SEGGER_RTT.h:
 
 /ARM/nRF5_SDK_13//external/segger_rtt/SEGGER_RTT_Conf.h:
@@ -173,3 +171,5 @@ _build/nrf52832_xxaa_BME280.c.o: /Users/janliphardt/GH_MENTAID//BME280.c \
 /ARM/nRF5_SDK_13//components/libraries/util/nrf_assert.h:
 
 /ARM/nRF5_SDK_13//components/libraries/util/app_error.h:
+
+/ARM/nRF5_SDK_13//components/drivers_nrf/delay/nrf_delay.h:
