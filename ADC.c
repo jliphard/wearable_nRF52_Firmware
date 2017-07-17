@@ -62,7 +62,7 @@ void ADC_callback(nrf_drv_saadc_evt_t const * p_event)
         
         VBATT           = ((float)p_event->data.done.p_buffer[0]) / 4096.0f;
         //NRF_LOG_INFO("ADC returned R: %d\r\n", p_event->data.done.p_buffer[0]);
-        VBATT           = VBATT * (127.0f/100.0f) * 3.30f;
+        VBATT           = VBATT * (139.0f/100.0f) * 3.30f;
         batteryVoltage  = (uint16_t)(VBATT * 100.0f);
     }
 }

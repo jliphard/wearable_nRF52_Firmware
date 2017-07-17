@@ -7402,37 +7402,37 @@ OUTPUT(_build/nrf52832_xxaa.out elf32-littlearm)
  .debug_frame   0x0000000000008d7c       0x28 /ARM/gcc-arm-none-eabi-6-2017-q1-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/hard/libc_nano.a(lib_a-memcpy-stub.o)
  .debug_frame   0x0000000000008da4       0x20 /ARM/gcc-arm-none-eabi-6-2017-q1-update/bin/../lib/gcc/arm-none-eabi/6.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/fpv4-sp/hard/libc_nano.a(lib_a-strcpy.o)
 
-.debug_info     0x0000000000000000    0x3aa8c
+.debug_info     0x0000000000000000    0x3aa8d
  .debug_info    0x0000000000000000     0x10d7 _build/nrf52832_xxaa_boards.c.o
  .debug_info    0x00000000000010d7     0x6a5b _build/nrf52832_xxaa_main.c.o
  .debug_info    0x0000000000007b32     0x10e9 _build/nrf52832_xxaa_I2C.c.o
  .debug_info    0x0000000000008c1b      0xf21 _build/nrf52832_xxaa_BME280.c.o
  .debug_info    0x0000000000009b3c      0xd8c _build/nrf52832_xxaa_ADC.c.o
- .debug_info    0x000000000000a8c8     0x1584 _build/nrf52832_xxaa_SPIFlash.c.o
- .debug_info    0x000000000000be4c      0xceb _build/nrf52832_xxaa_app_button.c.o
- .debug_info    0x000000000000cb37     0x2531 _build/nrf52832_xxaa_app_timer.c.o
- .debug_info    0x000000000000f068     0x29bf _build/nrf52832_xxaa_fds.c.o
- .debug_info    0x0000000000011a27     0x2088 _build/nrf52832_xxaa_fstorage.c.o
- .debug_info    0x0000000000013aaf      0xb29 _build/nrf52832_xxaa_app_error.c.o
- .debug_info    0x00000000000145d8      0xb50 _build/nrf52832_xxaa_app_error_weak.c.o
- .debug_info    0x0000000000015128      0xf5a _build/nrf52832_xxaa_app_util_platform.c.o
- .debug_info    0x0000000000016082     0x11a6 _build/nrf52832_xxaa_bsp.c.o
- .debug_info    0x0000000000017228     0x3ee9 _build/nrf52832_xxaa_bsp_btn_ble.c.o
- .debug_info    0x000000000001b111     0x1b4e _build/nrf52832_xxaa_nrf_drv_spi.c.o
- .debug_info    0x000000000001cc5f     0x1451 _build/nrf52832_xxaa_nrf_drv_clock.c.o
- .debug_info    0x000000000001e0b0      0xe2d _build/nrf52832_xxaa_nrf_drv_common.c.o
- .debug_info    0x000000000001eedd     0x2237 _build/nrf52832_xxaa_nrf_drv_gpiote.c.o
- .debug_info    0x0000000000021114     0x20f7 _build/nrf52832_xxaa_nrf_drv_twi.c.o
- .debug_info    0x000000000002320b     0x2ed2 _build/nrf52832_xxaa_nrf_drv_uart.c.o
- .debug_info    0x00000000000260dd     0x1ccb _build/nrf52832_xxaa_nrf_drv_saadc.c.o
- .debug_info    0x0000000000027da8      0xea4 _build/nrf52832_xxaa_nrf_saadc.c.o
- .debug_info    0x0000000000028c4c     0x183e _build/nrf52832_xxaa_nrf_drv_timer.c.o
- .debug_info    0x000000000002a48a     0x51cd _build/nrf52832_xxaa_ble_advertising.c.o
- .debug_info    0x000000000002f657     0x376a _build/nrf52832_xxaa_ble_advdata.c.o
- .debug_info    0x0000000000032dc1     0x4fc8 _build/nrf52832_xxaa_softdevice_handler.c.o
- .debug_info    0x0000000000037d89      0xd9d _build/nrf52832_xxaa_system_nrf52.c.o
- .debug_info    0x0000000000038b26     0x125d _build/nrf52832_xxaa_SEGGER_RTT.c.o
- .debug_info    0x0000000000039d83      0xd09 _build/nrf52832_xxaa_SEGGER_RTT_printf.c.o
+ .debug_info    0x000000000000a8c8     0x1585 _build/nrf52832_xxaa_SPIFlash.c.o
+ .debug_info    0x000000000000be4d      0xceb _build/nrf52832_xxaa_app_button.c.o
+ .debug_info    0x000000000000cb38     0x2531 _build/nrf52832_xxaa_app_timer.c.o
+ .debug_info    0x000000000000f069     0x29bf _build/nrf52832_xxaa_fds.c.o
+ .debug_info    0x0000000000011a28     0x2088 _build/nrf52832_xxaa_fstorage.c.o
+ .debug_info    0x0000000000013ab0      0xb29 _build/nrf52832_xxaa_app_error.c.o
+ .debug_info    0x00000000000145d9      0xb50 _build/nrf52832_xxaa_app_error_weak.c.o
+ .debug_info    0x0000000000015129      0xf5a _build/nrf52832_xxaa_app_util_platform.c.o
+ .debug_info    0x0000000000016083     0x11a6 _build/nrf52832_xxaa_bsp.c.o
+ .debug_info    0x0000000000017229     0x3ee9 _build/nrf52832_xxaa_bsp_btn_ble.c.o
+ .debug_info    0x000000000001b112     0x1b4e _build/nrf52832_xxaa_nrf_drv_spi.c.o
+ .debug_info    0x000000000001cc60     0x1451 _build/nrf52832_xxaa_nrf_drv_clock.c.o
+ .debug_info    0x000000000001e0b1      0xe2d _build/nrf52832_xxaa_nrf_drv_common.c.o
+ .debug_info    0x000000000001eede     0x2237 _build/nrf52832_xxaa_nrf_drv_gpiote.c.o
+ .debug_info    0x0000000000021115     0x20f7 _build/nrf52832_xxaa_nrf_drv_twi.c.o
+ .debug_info    0x000000000002320c     0x2ed2 _build/nrf52832_xxaa_nrf_drv_uart.c.o
+ .debug_info    0x00000000000260de     0x1ccb _build/nrf52832_xxaa_nrf_drv_saadc.c.o
+ .debug_info    0x0000000000027da9      0xea4 _build/nrf52832_xxaa_nrf_saadc.c.o
+ .debug_info    0x0000000000028c4d     0x183e _build/nrf52832_xxaa_nrf_drv_timer.c.o
+ .debug_info    0x000000000002a48b     0x51cd _build/nrf52832_xxaa_ble_advertising.c.o
+ .debug_info    0x000000000002f658     0x376a _build/nrf52832_xxaa_ble_advdata.c.o
+ .debug_info    0x0000000000032dc2     0x4fc8 _build/nrf52832_xxaa_softdevice_handler.c.o
+ .debug_info    0x0000000000037d8a      0xd9d _build/nrf52832_xxaa_system_nrf52.c.o
+ .debug_info    0x0000000000038b27     0x125d _build/nrf52832_xxaa_SEGGER_RTT.c.o
+ .debug_info    0x0000000000039d84      0xd09 _build/nrf52832_xxaa_SEGGER_RTT_printf.c.o
 
 .debug_abbrev   0x0000000000000000     0x5c64
  .debug_abbrev  0x0000000000000000      0x2fb _build/nrf52832_xxaa_boards.c.o

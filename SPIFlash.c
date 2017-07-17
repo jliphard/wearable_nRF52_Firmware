@@ -35,6 +35,8 @@ static uint8_t rx256[256];
 static uint8_t rxHalf[4+128];
 static uint8_t txHalf[4+128];
 
+#define APP_IRQ_PRIORITY_LOW 3  //overrides definition elsewhere
+
 ret_code_t FLASH_Init( void )
 {
     nrf_drv_spi_config_t const spi_config =
@@ -43,7 +45,7 @@ ret_code_t FLASH_Init( void )
         .mosi_pin       = 2,    
         .miso_pin       = 27,
         .ss_pin         = 26,
-        .irq_priority   = 7,//APP_IRQ_PRIORITY_LOW,
+        .irq_priority   = APP_IRQ_PRIORITY_LOW,
         .orc            = 0x42,
         .frequency      = NRF_DRV_SPI_FREQ_4M,
         .mode           = NRF_DRV_SPI_MODE_0,
