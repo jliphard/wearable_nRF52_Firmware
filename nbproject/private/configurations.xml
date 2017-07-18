@@ -21,6 +21,8 @@
       <in>I2C.h</in>
       <in>SPIFlash.c</in>
       <in>SPIFlash.h</in>
+      <in>VEML6040.c</in>
+      <in>VEML6040.h</in>
       <in>main.c</in>
     </df>
   </logicalFolder>

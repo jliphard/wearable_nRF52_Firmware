@@ -131,7 +131,8 @@ _build/nrf52832_xxaa_main.c.o: /Users/janliphardt/GH_MENTAID//main.c \
  /ARM/nRF5_SDK_13//components/drivers_nrf/spi_master/nrf_drv_spi.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_peripherals.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_spi.h \
- /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_spim.h
+ /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_spim.h \
+ /Users/janliphardt/GH_MENTAID//VEML6040.h
 
 /ARM/gcc-arm-none-eabi-6-2017-q1-update/lib/gcc/arm-none-eabi/6.3.1/include/stdint.h:
 
@@ -398,3 +399,5 @@ _build/nrf52832_xxaa_main.c.o: /Users/janliphardt/GH_MENTAID//main.c \
 /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_spi.h:
 
 /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_spim.h:
+
+/Users/janliphardt/GH_MENTAID//VEML6040.h:

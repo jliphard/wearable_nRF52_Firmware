@@ -31,6 +31,8 @@ void I2C_init(void)
        .clear_bus_init     = false
     };
 
+    //last one is some kind of context - no idea what that is....
+    //documentation is vague/nonexistant
     err_code = nrf_drv_twi_init(&i2c, &i2c_config, I2C_handler, NULL);
     APP_ERROR_CHECK(err_code);
 
@@ -57,15 +59,36 @@ void writeByte(uint8_t address, uint8_t subAddress, uint8_t data)
     //NRF_LOG_FLUSH();
 }
 
+void writeBytes(uint8_t address, uint8_t * data, uint8_t n_bytes)
+{
+    //uint8_t temp[2];
+    //temp[0] = subAddress;
+    //temp[1] = data;
+    
+    ret_code_t err_code;
+    
+    m_xfer_done = false;
+    //NRF_LOG_DEBUG("writeByte - Writing\r\n");
+    
+    err_code = nrf_drv_twi_tx(&i2c, address, data, n_bytes, false);
+    
+    APP_ERROR_CHECK(err_code);
+    
+    while (m_xfer_done == false); //wait until end of transfer
+    //NRF_LOG_FLUSH();
+}
+ 
 uint8_t readByte(uint8_t address, uint8_t subAddress)
 {
     ret_code_t err_code = 0;
+    
     uint8_t value;
     
     m_xfer_done = false;
     //NRF_LOG_DEBUG("readByte - Writing\r\n");
-    
+    //last position is the transfer pending flag
     err_code = nrf_drv_twi_tx(&i2c, address, &subAddress, 1, true);
+    
     APP_ERROR_CHECK(err_code);
     
     while (m_xfer_done == false); //wait until end of transfer
@@ -108,15 +131,19 @@ void I2C_handler(nrf_drv_twi_evt_t const * p_event, void * p_context)
     }
 }
 
-void readBytes(uint8_t address, uint8_t subAddress, uint8_t count, uint8_t * dest)
+//readBytes(BME280_ADDRESS_1, BME280_PRESS_MSB, 8, &rawData[0]);  
+
+void readBytes(uint8_t address, uint8_t subAddress, uint8_t * dest, uint8_t n_bytes )
 {
     ret_code_t err_code = 0;
     //0xF7 to 0xFE (temperature, pressure and humidity)
     //readBytes(BME280_ADDRESS_1, BME280_PRESS_MSB, 9, &rawData[0]);  
     
     m_xfer_done = false;
-    //err_code = nrf_drv_twi_tx(&i2c, address, subAddress, 1, true);
-    //while (m_xfer_done == false) {};
+    
+    err_code = nrf_drv_twi_tx(&i2c, address, &subAddress, 1, true);
+    
+    while (m_xfer_done == false) {};
     
     //comes back with error code
     //SEGGER_RTT_printf(0, "ReadBytes code: %d\n", err_code);
@@ -127,10 +154,10 @@ void readBytes(uint8_t address, uint8_t subAddress, uint8_t count, uint8_t * des
     {
         m_xfer_done = false;
         //NRF_LOG_DEBUG("readBytes - Reading\r\n");
-        //err_code = nrf_drv_twi_rx(&i2c, address, dest, count);
+        err_code = nrf_drv_twi_rx(&i2c, address, dest, n_bytes);
         //SEGGER_RTT_printf(0, "ReadBytes RX code: %d\n", err_code);
         //APP_ERROR_CHECK(err_code);
-        //while (m_xfer_done == false) {};
+        while (m_xfer_done == false) {};
     };
 
     //NRF_LOG_DEBUG("readBytes done\r\n");

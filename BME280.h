@@ -1,6 +1,6 @@
 
-#ifndef MA_BME280_H__
-#define MA_BME280_H__
+#ifndef MA_BME280_H_
+#define MA_BME280_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,4 +23,4 @@ extern "C" {
 }
 #endif
 
-#endif /* UDA1380_H__ */
+#endif /* MA_BME280_H_ */

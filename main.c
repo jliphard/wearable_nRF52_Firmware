@@ -49,6 +49,7 @@
 #include "BME280.h"     //pressure, temp, humidity
 #include "ADC.h"        //used for battery reading
 #include "SPIFlash.h"   //used for storage
+#include "VEML6040.h"    //light levels
 
 #include "SEGGER_RTT.h"
 
@@ -60,7 +61,7 @@
                                                                                    // 0 = infinite advertizing                                                                                        
 #define CONN_CFG_TAG                     1                                          /**< A tag that refers to the BLE stack configuration we set with @ref sd_ble_cfg_set. Default tag is @ref BLE_CONN_CFG_TAG_DEFAULT. */
 
-#define MEAS_INTERVAL                    APP_TIMER_TICKS(200)
+#define MEAS_INTERVAL                    APP_TIMER_TICKS(1000)
 
 #define SENSOR_CONTACT_DETECTED_INTERVAL APP_TIMER_TICKS(5000)                      /**< Sensor Contact Detected toggle interval (ticks). */
 
@@ -104,7 +105,9 @@ static ble_uuid_t m_adv_uuids[] =
 }; /* Universally unique service identifiers. */
 
 static uint16_t heartbeat16 = 0;
-static int32_t  resultPTH_1[3]; //PTH from sensor 1
+static int32_t  resultPTH[3]; //PTH from sensor 1
+
+static int16_t  resultVME[4];
 static uint8_t  battery_level8 = 0;
 static uint8_t fb[16];
 
@@ -933,7 +936,7 @@ void FLASH_Write_Record( uint8_t wp[] )
   
 };
 
-void add_to_flash( uint16_t counter, uint8_t batt, uint8_t pressure, uint8_t temperature, uint8_t humidity )
+void add_to_flash( uint16_t counter, uint8_t batt, uint8_t pressure, uint8_t temperature, uint8_t humidity, uint16_t lr, uint16_t lg, uint16_t lb, uint16_t lw )
 { 
 
     memset(fb, 0, sizeof(fb));
@@ -947,17 +950,17 @@ void add_to_flash( uint16_t counter, uint8_t batt, uint8_t pressure, uint8_t tem
     fb[ 4] = temperature;
     fb[ 5] = humidity;
     
-    fb[ 6] = 1; 
-    fb[ 7] = 1; 
+    fb[ 6] = (uint8_t) ( lr       & 0xff); 
+    fb[ 7] = (uint8_t) ( lr >> 8  & 0xff); 
     
-    fb[ 8] = 1;
-    fb[ 9] = 1;
+    fb[ 8] = (uint8_t) ( lg       & 0xff); 
+    fb[ 9] = (uint8_t) ( lg >> 8  & 0xff); 
     
-    fb[10] = 1;
-    fb[11] = 1;
+    fb[10] = (uint8_t) ( lb       & 0xff); 
+    fb[11] = (uint8_t) ( lb >> 8  & 0xff); 
     
-    fb[12] = 1;
-    fb[13] = 1;
+    fb[12] = (uint8_t) ( lw       & 0xff);
+    fb[13] = (uint8_t) ( lw >> 8  & 0xff); 
     
     fb[14] = 1;
     fb[15] = 1;
@@ -997,8 +1000,6 @@ static void update_battery(void)
 static void update_fast(void)
 {
 
-    //SEGGER_RTT_WriteString(0, "Update fast.\n");
-
     if ( batt_cycle > 3 ) 
     {
         update_battery();
@@ -1010,22 +1011,16 @@ static void update_fast(void)
     heartbeat16++; //this is the number of sampling cycles. 
         
     //Pressure, Temp, and Humidity
-    BME280_Read_PTH(&resultPTH_1[0]);
-    //SEGGER_RTT_WriteString(0, "PTH4 ");
+    BME280_Read_PTH(resultPTH);
     
-    //bluetooth update
-    BMP280P8 = (uint8_t)( (resultPTH_1[0]/  10.00) - 10000.0 ); //need to add 1000 to the pressure. 
-    BMP280T8 = (uint8_t)( (resultPTH_1[1]/  10.00) - 200.0   ); //need to add 20 to the temp
-    BMP280H8 = (uint8_t)( (resultPTH_1[2]/1000.00)           );
-    //SEGGER_RTT_WriteString(0, "PTH5 ");    
+    BMP280P8 = (uint8_t)( (resultPTH[0]/  10.00) - 10000.0 ); //need to add 1000 to the pressure. 
+    BMP280T8 = (uint8_t)( (resultPTH[1]/  10.00) - 200.0   ); //need to add 20 to the temp
+    BMP280H8 = (uint8_t)( (resultPTH[2]/1000.00)           );
     
-    //NRF_LOG_DEBUG("TO:%d\r\n",(uint16_t)(resultPTH_1[1]/10.00));
-    //NRF_LOG_DEBUG("P:%d\r\n",BMP280P8);
-    //NRF_LOG_DEBUG("T:%d\r\n",BMP280T8);
-    //NRF_LOG_DEBUG("H:%d\r\n",BMP280H8);
+    getRGBWdata(resultVME);
     
-    add_to_flash( heartbeat16, battery_level8, BMP280P8, BMP280T8, BMP280H8 );    
-    //SEGGER_RTT_WriteString(0, "PTH6.\n"); 
+    add_to_flash( heartbeat16, battery_level8, BMP280P8, BMP280T8, BMP280H8, resultVME[0], resultVME[1], resultVME[2], resultVME[3] );    
+    
     /*
     ret_code_t err_code = NRF_SUCCESS;
     err_code = ble_hrs_heart_rate_measurement_send_3(&m_hrs, BMP280P, BMP280T, BMP280H);
@@ -1081,6 +1076,10 @@ int main(void)
     
     //BME280 init. 
     BME280_Turn_On();
+    
+    nrf_delay_ms(500);
+    
+    VEML6040_Turn_On();
     
     //Flash memory
     FLASH_Init();

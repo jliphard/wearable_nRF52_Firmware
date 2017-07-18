@@ -34,7 +34,8 @@ enum Mode {BME280Sleep = 0, forced, forced2, normal};
 enum SBy  {t_00_5ms = 0, t_62_5ms, t_125ms, t_250ms, t_500ms, t_1000ms, t_10ms, t_20ms};
 
 // Read and store calibration data
-uint8_t calib[26];
+uint8_t calib25[25];
+uint8_t calib7[7];
   
 //from read PTH
 static uint8_t rawData[8];  // 20-bit pressure register data stored here
@@ -62,11 +63,13 @@ void BME280_Turn_On(void)
 {
     uint8_t e = readByte(BME280_ADDRESS_1, BME280_ID);
     
+    SEGGER_RTT_printf(0, "BME280 ID:%d Should be = 96\n", e);
+    
     //NRF_LOG_DEBUG("BME_280_set_mode: readByte returned e: %d\r\n", e);
     //NRF_LOG_DEBUG("Should be 96 (HEX: 60)\r\n");
                    
     if(e == 0x60) {
-        writeByte(BME280_ADDRESS_1, BME280_RESET, 0xB6); // reset BME280 before initialization   
+        writeByte( BME280_ADDRESS_1, BME280_RESET, 0xB6 ); // reset BME280 before initialization   
         nrf_delay_ms(100);
         BME280_Configure( BME280_ADDRESS_1 ); // Initialize BME280 altimeter
         nrf_delay_ms(100);
@@ -90,38 +93,40 @@ void BME280_Configure( uint8_t address )
   // Set standby time interval in normal mode and bandwidth
   writeByte(address, BME280_CONFIG, SBy << 5 | IIRFilter << 2);
 
-  readBytes(address, BME280_CALIB00, 26, &calib[0]);
+  readBytes(address, BME280_CALIB00, calib25, 25);
   
-  dig_T1 = (uint16_t)(((uint16_t) calib[ 1] << 8) | calib[ 0]);
+  dig_T1 = (uint16_t)(((uint16_t) calib25[ 1] << 8) | calib25[ 0]);
   //NRF_LOG_DEBUG("BME280T1:%d\r\n",dig_T1);
-  dig_T2 = ( int16_t)((( int16_t) calib[ 3] << 8) | calib[ 2]);
+  dig_T2 = ( int16_t)((( int16_t) calib25[ 3] << 8) | calib25[ 2]);
   //NRF_LOG_DEBUG("BME280T2:%d\r\n",dig_T2);
-  dig_T3 = ( int16_t)((( int16_t) calib[ 5] << 8) | calib[ 4]);
+  dig_T3 = ( int16_t)((( int16_t) calib25[ 5] << 8) | calib25[ 4]);
   //NRF_LOG_DEBUG("BME280T3:%d\r\n",dig_T3);
-  dig_P1 = (uint16_t)(((uint16_t) calib[ 7] << 8) | calib[ 6]);
+  dig_P1 = (uint16_t)(((uint16_t) calib25[ 7] << 8) | calib25[ 6]);
   //NRF_LOG_DEBUG("BME280P1:%d\r\n",dig_P1);
-  dig_P2 = ( int16_t)((( int16_t) calib[ 9] << 8) | calib[ 8]);
-  dig_P3 = ( int16_t)((( int16_t) calib[11] << 8) | calib[10]);
-  dig_P4 = ( int16_t)((( int16_t) calib[13] << 8) | calib[12]);
-  dig_P5 = ( int16_t)((( int16_t) calib[15] << 8) | calib[14]);
-  dig_P6 = ( int16_t)((( int16_t) calib[17] << 8) | calib[16]);
-  dig_P7 = ( int16_t)((( int16_t) calib[19] << 8) | calib[18]);
-  dig_P8 = ( int16_t)((( int16_t) calib[21] << 8) | calib[20]);
-  dig_P9 = ( int16_t)((( int16_t) calib[23] << 8) | calib[22]);
+  dig_P2 = ( int16_t)((( int16_t) calib25[ 9] << 8) | calib25[ 8]);
+  dig_P3 = ( int16_t)((( int16_t) calib25[11] << 8) | calib25[10]);
+  dig_P4 = ( int16_t)((( int16_t) calib25[13] << 8) | calib25[12]);
+  dig_P5 = ( int16_t)((( int16_t) calib25[15] << 8) | calib25[14]);
+  dig_P6 = ( int16_t)((( int16_t) calib25[17] << 8) | calib25[16]);
+  dig_P7 = ( int16_t)((( int16_t) calib25[19] << 8) | calib25[18]);
+  dig_P8 = ( int16_t)((( int16_t) calib25[21] << 8) | calib25[20]);
+  dig_P9 = ( int16_t)((( int16_t) calib25[23] << 8) | calib25[22]);
+  
+  dig_H1 = calib25[24];
+  //do not need the last 2?
   //NRF_LOG_DEBUG("BME280P9:%d\r\n",dig_P9);
-  dig_H1 = calib[25];
+
+  readBytes(address, BME280_CALIB26, calib7, 7);
   
-  readBytes(address, BME280_CALIB26, 7, &calib[0]);
-  
-  dig_H2 = ( int16_t)((( int16_t) calib[1] << 8) | calib[0]);
+  dig_H2 = ( int16_t)((( int16_t) calib7[1] << 8) | calib7[0]);
  // NRF_LOG_DEBUG("BME280H2:%d\r\n",dig_H2);
-  dig_H3 = calib[2];
+  dig_H3 = calib7[2];
   //NRF_LOG_DEBUG("BME280H3:%d\r\n",dig_H3);
-  dig_H4 = ( int16_t)(((( int16_t) calib[3] << 8) | (0x0F & calib[4]) << 4) >> 4);
+  dig_H4 = ( int16_t)(((( int16_t) calib7[3] << 8) | (0x0F & calib7[4]) << 4) >> 4);
   //NRF_LOG_DEBUG("BME280H4:%d\r\n",dig_H4);
-  dig_H5 = ( int16_t)(((( int16_t) calib[5] << 8) | (0xF0 & calib[4]) ) >> 4 );
+  dig_H5 = ( int16_t)(((( int16_t) calib7[5] << 8) | (0xF0 & calib7[4]) ) >> 4 );
   //NRF_LOG_DEBUG("BME280H5:%d\r\n",dig_H5);
-  dig_H6 = calib[6];
+  dig_H6 = calib7[6];
   
   //NRF_LOG_DEBUG("BME280_Configure() completed.\r\n");
 }
@@ -129,15 +134,18 @@ void BME280_Configure( uint8_t address )
 void BME280_Read_PTH(int32_t * resultPTH)
 {
 
-  //SEGGER_RTT_WriteString(0, "Read PTH1 ");
+  readBytes(BME280_ADDRESS_1, BME280_PRESS_MSB, rawData, 8);  
   
-  readBytes(BME280_ADDRESS_1, BME280_PRESS_MSB, 8, &rawData[0]);  
+  //SEGGER_RTT_printf(0, "BME280:%d %d %d\n", rawData[0], rawData[1], rawData[2]);
+  //SEGGER_RTT_printf(0, "BME280:%d %d %d\n", rawData[3], rawData[4], rawData[5]);
+  //SEGGER_RTT_printf(0, "BME280:%d %d\n"   , rawData[6], rawData[7]);
   
   //Pressure
   result[0] = (int32_t) (((uint32_t) rawData[0] << 16 | (uint32_t) rawData[1] << 8 | rawData[2]) >> 4);
   result[1] = (int32_t) (((uint32_t) rawData[3] << 16 | (uint32_t) rawData[4] << 8 | rawData[5]) >> 4);
   result[2] = (int16_t) (((uint16_t) rawData[6] <<  8 |            rawData[7]) );
   
+  //SEGGER_RTT_printf(0, "BME280:%d %d %d\n", result[0], result[1], result[2]);
   //SEGGER_RTT_WriteString(0, " PTH2 ");
   
   //Need t_fine for all three compensations
@@ -151,6 +159,8 @@ void BME280_Read_PTH(int32_t * resultPTH)
   resultPTH[0] = BME280_Compensate_P(result[0], t_fine);
   resultPTH[1] = BME280_Compensate_T(           t_fine);
   resultPTH[2] = BME280_Compensate_H(result[2], t_fine);
+  
+  //SEGGER_RTT_printf(0, "BME280:%d %d %d\n", resultPTH[0], resultPTH[1], resultPTH[2]);
   
   //SEGGER_RTT_WriteString(0, "PTH3.\n");
      

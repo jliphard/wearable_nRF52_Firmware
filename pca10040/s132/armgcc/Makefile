@@ -15,6 +15,7 @@ SRC_FILES += \
   $(PROJ_DIR)/BME280.c \
   $(PROJ_DIR)/ADC.c \
   $(PROJ_DIR)/SPIFlash.c \
+  $(PROJ_DIR)/VEML6040.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_serial.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_frontend.c \
   $(SDK_ROOT)/components/libraries/button/app_button.c \
