@@ -34,7 +34,7 @@ enum Mode {BME280Sleep = 0, forced, forced2, normal};
 enum SBy  {t_00_5ms = 0, t_62_5ms, t_125ms, t_250ms, t_500ms, t_1000ms, t_10ms, t_20ms};
 
 // Read and store calibration data
-uint8_t calib25[25];
+uint8_t calib26[26];
 uint8_t calib7[7];
   
 //from read PTH
@@ -93,39 +93,34 @@ void BME280_Configure( uint8_t address )
   // Set standby time interval in normal mode and bandwidth
   writeByte(address, BME280_CONFIG, SBy << 5 | IIRFilter << 2);
 
-  readBytes(address, BME280_CALIB00, calib25, 25);
+  readBytes(address, BME280_CALIB00, calib26, 26);
   
-  dig_T1 = (uint16_t)(((uint16_t) calib25[ 1] << 8) | calib25[ 0]);
+  dig_T1 = (uint16_t)(((uint16_t) calib26[ 1] << 8) | calib26[ 0]);
   //NRF_LOG_DEBUG("BME280T1:%d\r\n",dig_T1);
-  dig_T2 = ( int16_t)((( int16_t) calib25[ 3] << 8) | calib25[ 2]);
+  dig_T2 = ( int16_t)((( int16_t) calib26[ 3] << 8) | calib26[ 2]);
   //NRF_LOG_DEBUG("BME280T2:%d\r\n",dig_T2);
-  dig_T3 = ( int16_t)((( int16_t) calib25[ 5] << 8) | calib25[ 4]);
+  dig_T3 = ( int16_t)((( int16_t) calib26[ 5] << 8) | calib26[ 4]);
   //NRF_LOG_DEBUG("BME280T3:%d\r\n",dig_T3);
-  dig_P1 = (uint16_t)(((uint16_t) calib25[ 7] << 8) | calib25[ 6]);
+  dig_P1 = (uint16_t)(((uint16_t) calib26[ 7] << 8) | calib26[ 6]);
   //NRF_LOG_DEBUG("BME280P1:%d\r\n",dig_P1);
-  dig_P2 = ( int16_t)((( int16_t) calib25[ 9] << 8) | calib25[ 8]);
-  dig_P3 = ( int16_t)((( int16_t) calib25[11] << 8) | calib25[10]);
-  dig_P4 = ( int16_t)((( int16_t) calib25[13] << 8) | calib25[12]);
-  dig_P5 = ( int16_t)((( int16_t) calib25[15] << 8) | calib25[14]);
-  dig_P6 = ( int16_t)((( int16_t) calib25[17] << 8) | calib25[16]);
-  dig_P7 = ( int16_t)((( int16_t) calib25[19] << 8) | calib25[18]);
-  dig_P8 = ( int16_t)((( int16_t) calib25[21] << 8) | calib25[20]);
-  dig_P9 = ( int16_t)((( int16_t) calib25[23] << 8) | calib25[22]);
+  dig_P2 = ( int16_t)((( int16_t) calib26[ 9] << 8) | calib26[ 8]);
+  dig_P3 = ( int16_t)((( int16_t) calib26[11] << 8) | calib26[10]);
+  dig_P4 = ( int16_t)((( int16_t) calib26[13] << 8) | calib26[12]);
+  dig_P5 = ( int16_t)((( int16_t) calib26[15] << 8) | calib26[14]);
+  dig_P6 = ( int16_t)((( int16_t) calib26[17] << 8) | calib26[16]);
+  dig_P7 = ( int16_t)((( int16_t) calib26[19] << 8) | calib26[18]);
+  dig_P8 = ( int16_t)((( int16_t) calib26[21] << 8) | calib26[20]);
+  dig_P9 = ( int16_t)((( int16_t) calib26[23] << 8) | calib26[22]);
   
-  dig_H1 = calib25[24];
-  //do not need the last 2?
-  //NRF_LOG_DEBUG("BME280P9:%d\r\n",dig_P9);
+  //24 is missing - this is not typo - complain to Bosch
+  dig_H1 = calib26[25];
 
   readBytes(address, BME280_CALIB26, calib7, 7);
   
   dig_H2 = ( int16_t)((( int16_t) calib7[1] << 8) | calib7[0]);
- // NRF_LOG_DEBUG("BME280H2:%d\r\n",dig_H2);
   dig_H3 = calib7[2];
-  //NRF_LOG_DEBUG("BME280H3:%d\r\n",dig_H3);
   dig_H4 = ( int16_t)(((( int16_t) calib7[3] << 8) | (0x0F & calib7[4]) << 4) >> 4);
-  //NRF_LOG_DEBUG("BME280H4:%d\r\n",dig_H4);
   dig_H5 = ( int16_t)(((( int16_t) calib7[5] << 8) | (0xF0 & calib7[4]) ) >> 4 );
-  //NRF_LOG_DEBUG("BME280H5:%d\r\n",dig_H5);
   dig_H6 = calib7[6];
   
   //NRF_LOG_DEBUG("BME280_Configure() completed.\r\n");
@@ -146,7 +141,6 @@ void BME280_Read_PTH(int32_t * resultPTH)
   result[2] = (int16_t) (((uint16_t) rawData[6] <<  8 |            rawData[7]) );
   
   //SEGGER_RTT_printf(0, "BME280:%d %d %d\n", result[0], result[1], result[2]);
-  //SEGGER_RTT_WriteString(0, " PTH2 ");
   
   //Need t_fine for all three compensations
   adc_T = result[1];
