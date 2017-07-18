@@ -915,10 +915,11 @@ void FLASH_Write_Record( uint8_t wp[] )
   {
         flash_green();
         
-        SEGGER_RTT_printf(0, "TH:%d VB:%d\r\n", heartbeat16, battery_level8);
+        SEGGER_RTT_printf(0, "TH:%d VB:%d DP:%d\r\n", heartbeat16, battery_level8, GLOB_datastart);
+        //SEGGER_RTT_printf(0, "Datapage:%d\r\n", GLOB_datastart);
         
         //flush to memory.... 
-        //FLASH_Page_Write( GLOB_datastart, flash_page_buffer );  
+        FLASH_Page_Write( GLOB_datastart, flash_page_buffer );  
      
         //advance counter  
         GLOB_datastart++;
@@ -976,7 +977,6 @@ static void update_battery(void)
     
     //for debugging let's record the actual voltage
     battery_level8 = (uint8_t)(Current_VBATT() - 300);
-
     //SEGGER_RTT_printf(0, "Battery: %d\n", battery_level8);
     
     /*
@@ -1007,7 +1007,7 @@ static void update_fast(void)
         batt_cycle++;
     };
     
-    heartbeat16++;
+    heartbeat16++; //this is the number of sampling cycles. 
         
     //Pressure, Temp, and Humidity
     BME280_Read_PTH(&resultPTH_1[0]);
@@ -1053,17 +1053,19 @@ int main(void)
 {
     SEGGER_RTT_WriteString(0, "\n\n***********\n");
     
-    //bool erase_bonds;
-
-    //log_init();    
     RTC1_timer_init();
     leds_init();
     
-    // Request LF clock - needed when softdevice is off
-    lfclk_request();
-    
+    //bool erase_bonds;
     //buttons_leds_init(&erase_bonds);
-    //ble_stack_init();
+    
+    if( 1 == 2 )
+    {
+        lfclk_request(); // Request LF clock - needed when softdevice is off
+    } else {
+        ble_stack_init(); //fire up the softdevice
+    }
+        
     //gap_params_init();
     //gatt_init();
     //advertising_init();

@@ -46,7 +46,7 @@ ret_code_t FLASH_Init( void )
         .miso_pin       = 27,
         .ss_pin         = 26,
         .irq_priority   = APP_IRQ_PRIORITY_LOW,
-        .orc            = 0x42,
+        .orc            = 0xFF,
         .frequency      = NRF_DRV_SPI_FREQ_4M,
         .mode           = NRF_DRV_SPI_MODE_0,
         .bit_order      = NRF_DRV_SPI_BIT_ORDER_MSB_FIRST, 
@@ -106,15 +106,16 @@ bool FLASH_Is_Write_Enabled( void )
     cmd[0] = CMD_READ_STATUS_REG;
     nrf_drv_spi_transfer(&m_spi_master_1, cmd, sizeof(cmd), rx2, sizeof(rx2));
     
-    bool retval = true;
-     
+    //bool retval = true;
+    
     //S1 == 1 Write Enable Latch (WEL) is a read only bit in the status register 
-    if ( CHECK_BIT(rx2[1],1) != 1) {
-        retval = false;
+    if ( CHECK_BIT(rx2[1],1) != 1) return false;
+    //{
+        
         //NRF_LOG_DEBUG("FLASH_Is_Write_Enabled: False\r\n"); 
-    }
+    //}
 
-    return retval;
+    return true;
 }
 
 bool FLASH_Is_Busy( void ) 
@@ -123,14 +124,15 @@ bool FLASH_Is_Busy( void )
     cmd[0] = CMD_READ_STATUS_REG;
     nrf_drv_spi_transfer(&m_spi_master_1, cmd, sizeof(cmd), rx2, sizeof(rx2));
     
-    bool retval = false;
+    //bool retval = false;
     
-    if ( CHECK_BIT(rx2[1],0) == 1 ) {
-        retval = true;
+    if ( CHECK_BIT(rx2[1],0) == 1 ) return true;
+    //{
+    //    retval = true;
         //NRF_LOG_DEBUG("FLASH_Is_Busy!\r\n"); 
-    } 
+    //} 
 
-    return retval;
+    return false;
 }
 
 uint8_t * FLASH_Page_Read( uint16_t pageN )
