@@ -44,38 +44,24 @@ void I2C_init(void)
 void writeByte(uint8_t address, uint8_t subAddress, uint8_t data)
 {
     uint8_t temp[2];
+    
     temp[0] = subAddress;
     temp[1] = data;
     
     ret_code_t err_code;
-    
     m_xfer_done = false;
-    //NRF_LOG_DEBUG("writeByte - Writing\r\n");
-    
     err_code = nrf_drv_twi_tx(&i2c, address, &temp[0], 2, true);
     APP_ERROR_CHECK(err_code);
-    
     while (m_xfer_done == false); //wait until end of transfer
-    //NRF_LOG_FLUSH();
 }
 
 void writeBytes(uint8_t address, uint8_t * data, uint8_t n_bytes)
 {
-    //uint8_t temp[2];
-    //temp[0] = subAddress;
-    //temp[1] = data;
-    
-    ret_code_t err_code;
-    
+    ret_code_t err_code;    
     m_xfer_done = false;
-    //NRF_LOG_DEBUG("writeByte - Writing\r\n");
-    
-    err_code = nrf_drv_twi_tx(&i2c, address, data, n_bytes, false);
-    
+    err_code = nrf_drv_twi_tx(&i2c, address, data, n_bytes, false); //false = close the channel - not waiting for response 
     APP_ERROR_CHECK(err_code);
-    
     while (m_xfer_done == false); //wait until end of transfer
-    //NRF_LOG_FLUSH();
 }
  
 uint8_t readByte(uint8_t address, uint8_t subAddress)
