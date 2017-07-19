@@ -45,6 +45,7 @@ _build/nrf52832_xxaa_main.c.o: /Users/janliphardt/GH_MENTAID//main.c \
  ../config/sdk_config.h \
  /ARM/nRF5_SDK_13//components/libraries/util/nordic_common.h \
  /ARM/nRF5_SDK_13//components/libraries/util/app_error_weak.h \
+ /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/math.h \
  /ARM/nRF5_SDK_13//components/softdevice/s132/headers/ble.h \
  /ARM/nRF5_SDK_13//components/softdevice/s132/headers/ble_ranges.h \
  /ARM/nRF5_SDK_13//components/softdevice/s132/headers/ble_types.h \
@@ -124,6 +125,7 @@ _build/nrf52832_xxaa_main.c.o: /Users/janliphardt/GH_MENTAID//main.c \
  /ARM/nRF5_SDK_13//external/segger_rtt/SEGGER_RTT.h \
  /ARM/nRF5_SDK_13//external/segger_rtt/SEGGER_RTT_Conf.h \
  /Users/janliphardt/GH_MENTAID//BME280.h \
+ /Users/janliphardt/GH_MENTAID//BMA280.h \
  /Users/janliphardt/GH_MENTAID//ADC.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/saadc/nrf_drv_saadc.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_saadc.h \
@@ -225,6 +227,8 @@ _build/nrf52832_xxaa_main.c.o: /Users/janliphardt/GH_MENTAID//main.c \
 /ARM/nRF5_SDK_13//components/libraries/util/nordic_common.h:
 
 /ARM/nRF5_SDK_13//components/libraries/util/app_error_weak.h:
+
+/ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/math.h:
 
 /ARM/nRF5_SDK_13//components/softdevice/s132/headers/ble.h:
 
@@ -383,6 +387,8 @@ _build/nrf52832_xxaa_main.c.o: /Users/janliphardt/GH_MENTAID//main.c \
 /ARM/nRF5_SDK_13//external/segger_rtt/SEGGER_RTT_Conf.h:
 
 /Users/janliphardt/GH_MENTAID//BME280.h:
+
+/Users/janliphardt/GH_MENTAID//BMA280.h:
 
 /Users/janliphardt/GH_MENTAID//ADC.h:
 

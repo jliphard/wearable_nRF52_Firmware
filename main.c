@@ -12,6 +12,8 @@
 
 #include "app_error.h"
 
+#include "math.h"
+
 #include "ble.h"
 #include "ble_hci.h"
 #include "ble_srv_common.h"
@@ -47,6 +49,7 @@
 
 #include "I2C.h"        //everything on the I2C bus
 #include "BME280.h"     //pressure, temp, humidity
+#include "BMA280.h"     //accelerometer
 #include "ADC.h"        //used for battery reading
 #include "SPIFlash.h"   //used for storage
 #include "VEML6040.h"    //light levels
@@ -61,7 +64,7 @@
                                                                                    // 0 = infinite advertizing                                                                                        
 #define CONN_CFG_TAG                     1                                          /**< A tag that refers to the BLE stack configuration we set with @ref sd_ble_cfg_set. Default tag is @ref BLE_CONN_CFG_TAG_DEFAULT. */
 
-#define MEAS_INTERVAL                    APP_TIMER_TICKS(1000)
+#define MEAS_INTERVAL                    APP_TIMER_TICKS(3000)
 
 #define SENSOR_CONTACT_DETECTED_INTERVAL APP_TIMER_TICKS(5000)                      /**< Sensor Contact Detected toggle interval (ticks). */
 
@@ -105,9 +108,11 @@ static ble_uuid_t m_adv_uuids[] =
 }; /* Universally unique service identifiers. */
 
 static uint16_t heartbeat16 = 0;
-static int32_t  resultPTH[3]; //PTH from sensor 1
 
+static int32_t  resultPTH[3]; //PTH from sensor 1
 static int16_t  resultVME[4];
+static int16_t  resultBMA[3];
+
 static uint8_t  battery_level8 = 0;
 static uint8_t fb[16];
 
@@ -936,7 +941,10 @@ void FLASH_Write_Record( uint8_t wp[] )
   
 };
 
-void add_to_flash( uint16_t counter, uint8_t batt, uint8_t pressure, uint8_t temperature, uint8_t humidity, uint16_t lr, uint16_t lg, uint16_t lb, uint16_t lw )
+void add_to_flash( uint16_t counter, \
+        uint8_t batt, uint8_t pressure, uint8_t temperature, \
+        uint8_t humidity, uint16_t lr, uint16_t lg, uint16_t lb, uint16_t lw,
+        uint16_t accelT )
 { 
 
     memset(fb, 0, sizeof(fb));
@@ -962,8 +970,8 @@ void add_to_flash( uint16_t counter, uint8_t batt, uint8_t pressure, uint8_t tem
     fb[12] = (uint8_t) ( lw       & 0xff);
     fb[13] = (uint8_t) ( lw >> 8  & 0xff); 
     
-    fb[14] = 1;
-    fb[15] = 1;
+    fb[14] = (uint8_t) ( accelT       & 0xff);
+    fb[15] = (uint8_t) ( accelT >> 8  & 0xff); 
 
     FLASH_Write_Record( fb );    
 }
@@ -1011,15 +1019,30 @@ static void update_fast(void)
     heartbeat16++; //this is the number of sampling cycles. 
         
     //Pressure, Temp, and Humidity
-    BME280_Read_PTH(resultPTH);
+    BME280_Get_Data(resultPTH);
     
     BMP280P8 = (uint8_t)( (resultPTH[0]/  10.00) - 10000.0 ); //need to add 1000 to the pressure. 
     BMP280T8 = (uint8_t)( (resultPTH[1]/  10.00) - 200.0   ); //need to add 20 to the temp
     BMP280H8 = (uint8_t)( (resultPTH[2]/1000.00)           );
     
-    getRGBWdata(resultVME);
+    //light intensity
+    VEML6040_Get_Data(resultVME);
     
-    add_to_flash( heartbeat16, battery_level8, BMP280P8, BMP280T8, BMP280H8, resultVME[0], resultVME[1], resultVME[2], resultVME[3] );    
+    //acceleration
+    BMA280_Get_Data(resultBMA);
+    
+    float ax = (float)resultBMA[0];
+    float ay = (float)resultBMA[1];
+    float az = (float)resultBMA[2] - 16384.0f;//take off gravity
+    
+    float accelT = (ax*ax) + (ay*ay) + (az*az);
+    accelT = sqrt(accelT);
+    
+    //SEGGER_RTT_printf(0, "x-axis offset = %d mg\n", (int16_t)(100.0f*(float)offsetX*FCres/256.0f));
+    
+    //SEGGER_RTT_printf(0, "accel:%d\n", (uint16_t)accelT);
+    
+    add_to_flash( heartbeat16, battery_level8, BMP280P8, BMP280T8, BMP280H8, resultVME[0], resultVME[1], resultVME[2], resultVME[3], (uint16_t)accelT );    
     
     /*
     ret_code_t err_code = NRF_SUCCESS;
@@ -1054,8 +1077,7 @@ int main(void)
     //bool erase_bonds;
     //buttons_leds_init(&erase_bonds);
     
-    if( 1 == 2 )
-    {
+    if( 1 == 2 ) {
         lfclk_request(); // Request LF clock - needed when softdevice is off
     } else {
         ble_stack_init(); //fire up the softdevice
@@ -1076,10 +1098,23 @@ int main(void)
     
     //BME280 init. 
     BME280_Turn_On();
-    
+
     nrf_delay_ms(500);
     
     VEML6040_Turn_On();
+    
+    nrf_delay_ms(500);
+    
+    BMA280_Turn_On_Fast();
+    
+    nrf_delay_ms(500);
+    
+    BMA280_Calibrate();
+       
+    nrf_delay_ms(500);
+    
+    //save energy - do not need to sample that quickly
+    BMA280_Turn_On_Slow();
     
     //Flash memory
     FLASH_Init();

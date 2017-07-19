@@ -1,10 +1,7 @@
-
-
 #include "BME280.h"
 
-#define BME280_ADDRESS_1  0x76   // Address of BMP280 altimeter 1
+#define BME280_ADDRESS_1  0x76
 
-// BME280 registers
 #define BME280_ID         0xD0
 
 #define BME280_PRESS_MSB  0xF7
@@ -64,20 +61,14 @@ void BME280_Turn_On(void)
     uint8_t e = readByte(BME280_ADDRESS_1, BME280_ID);
     
     SEGGER_RTT_printf(0, "BME280 ID:%d Should be = 96\n", e);
-    
-    //NRF_LOG_DEBUG("BME_280_set_mode: readByte returned e: %d\r\n", e);
-    //NRF_LOG_DEBUG("Should be 96 (HEX: 60)\r\n");
-                   
+                       
     if(e == 0x60) {
         writeByte( BME280_ADDRESS_1, BME280_RESET, 0xB6 ); // reset BME280 before initialization   
         nrf_delay_ms(100);
         BME280_Configure( BME280_ADDRESS_1 ); // Initialize BME280 altimeter
         nrf_delay_ms(100);
-        //NRF_LOG_DEBUG("BMP280 looks good\r\n");
-    }
-    else {
-        //NRF_LOG_DEBUG("BMP280 not responding\r\n");
-    }
+    };
+   
 }
 
 void BME280_Configure( uint8_t address )
@@ -123,25 +114,17 @@ void BME280_Configure( uint8_t address )
   dig_H5 = ( int16_t)(((( int16_t) calib7[5] << 8) | (0xF0 & calib7[4]) ) >> 4 );
   dig_H6 = calib7[6];
   
-  //NRF_LOG_DEBUG("BME280_Configure() completed.\r\n");
 }
 
-void BME280_Read_PTH(int32_t * resultPTH)
+void BME280_Get_Data(int32_t * resultPTH)
 {
-
   readBytes(BME280_ADDRESS_1, BME280_PRESS_MSB, rawData, 8);  
-  
-  //SEGGER_RTT_printf(0, "BME280:%d %d %d\n", rawData[0], rawData[1], rawData[2]);
-  //SEGGER_RTT_printf(0, "BME280:%d %d %d\n", rawData[3], rawData[4], rawData[5]);
-  //SEGGER_RTT_printf(0, "BME280:%d %d\n"   , rawData[6], rawData[7]);
   
   //Pressure
   result[0] = (int32_t) (((uint32_t) rawData[0] << 16 | (uint32_t) rawData[1] << 8 | rawData[2]) >> 4);
   result[1] = (int32_t) (((uint32_t) rawData[3] << 16 | (uint32_t) rawData[4] << 8 | rawData[5]) >> 4);
   result[2] = (int16_t) (((uint16_t) rawData[6] <<  8 |            rawData[7]) );
-  
-  //SEGGER_RTT_printf(0, "BME280:%d %d %d\n", result[0], result[1], result[2]);
-  
+    
   //Need t_fine for all three compensations
   adc_T = result[1];
   
@@ -154,10 +137,9 @@ void BME280_Read_PTH(int32_t * resultPTH)
   resultPTH[1] = BME280_Compensate_T(           t_fine);
   resultPTH[2] = BME280_Compensate_H(result[2], t_fine);
   
-  //SEGGER_RTT_printf(0, "BME280:%d %d %d\n", resultPTH[0], resultPTH[1], resultPTH[2]);
-  
-  //SEGGER_RTT_WriteString(0, "PTH3.\n");
-     
+  if ( SEGGER_BME )
+      SEGGER_RTT_printf(0, "BME280:%d %d %d\n", resultPTH[0], resultPTH[1], resultPTH[2]);
+       
 }  
 
 // Returns humidity in %RH as unsigned 32 bit integer in Q22.10 format (22integer and 10fractional bits).

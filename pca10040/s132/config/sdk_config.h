@@ -6,8 +6,10 @@
 #endif
 // <h> Application 
 
-//#define APP_IRQ_PRIORITY_LOW 3
-//custom
+#define SEGGER_VEML 0
+#define SEGGER_BMA 0
+#define SEGGER_BME 0
+
 //#define NRF_LOG 1
 #define NRF_LOG_ENABLED 0
 #define NRF_LOG_DEFAULT_LEVEL 0

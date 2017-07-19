@@ -19,7 +19,6 @@
 #define  IT_640  4  //  640 ms
 #define  IT_1280 5  // 1280 ms
 
-// * @brief Function for setting active
 void VEML6040_Turn_On( void )
 {
     uint8_t packet[3]; 
@@ -38,7 +37,7 @@ void VEML6040_Turn_Off( void )
     writeBytes(VEML6040_ADDRESS, packet, 3);
 }    
 
-void getRGBWdata(uint16_t * dest)
+void VEML6040_Get_Data(uint16_t * dest)
 {
     uint8_t rawData[2] = {0, 0};
     
@@ -54,6 +53,7 @@ void getRGBWdata(uint16_t * dest)
     readBytes(VEML6040_ADDRESS, VEML6040_W_DATA, rawData, 2);  
     dest[3] = ((int16_t) rawData[1] << 8) | rawData[0];
 
-    //SEGGER_RTT_printf(0, "VEML6040:%d %d %d %d\n", dest[0], dest[1], dest[2], dest[3]);
+    if( SEGGER_VEML )
+        SEGGER_RTT_printf(0, "VEML6040:%d %d %d %d\n", dest[0], dest[1], dest[2], dest[3]);
 }
 
