@@ -7,8 +7,8 @@
 // <h> Application 
 
 #define SEGGER_VEML 0
-#define SEGGER_BMA 0
-#define SEGGER_BME 0
+#define SEGGER_BMA  0
+#define SEGGER_BME  0
 
 //#define NRF_LOG 1
 #define NRF_LOG_ENABLED 0

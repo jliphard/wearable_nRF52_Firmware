@@ -1119,7 +1119,7 @@ int main(void)
     //Flash memory
     FLASH_Init();
     
-    FLASH_Get_ID();
+    FLASH_Print_ID();
     
     nrf_delay_ms(500);
     
@@ -1131,14 +1131,29 @@ int main(void)
     
     flash_red();
     
-    /*
     uint16_t j = 0;
-    for(j = 0; j < 190; j++) {  
+ 
+    for(j = 0; j < 100; j++) 
+    {  
         nrf_delay_ms(100);
         FLASH_Page_Read(j);
     };
-    */
        
+    /* The four basic functions are to:
+     * (1) erase
+     * (2) record
+     * (3) record + stream data to phone. 
+     * (4) get data from phone - especially position and time
+     * 
+     * We could advertize for two mins after turn on. 
+     * If no connection -> record
+     * If connection, then would synchronize time, and get occasional GPS packets.
+     * Also, would send data to phone app. 
+     * In the same app, could chose to delete data
+     * Could also flush data to pubnub?
+    */ 
+    
+    
     RTC1_timer_start();
     //advertising_start(erase_bonds);
      

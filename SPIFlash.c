@@ -4,8 +4,7 @@
 
 #include "SPIFlash.h"
 #include "nrf_delay.h"
-#include "nrf_log.h"
-#include "nrf_log_ctrl.h"
+#include "SEGGER_RTT.h"
 
 #define NRF_LOG_MODULE_NAME "FLASH"
 
@@ -37,7 +36,7 @@ static uint8_t txHalf[4+128];
 
 #define APP_IRQ_PRIORITY_LOW 3  //overrides definition elsewhere
 
-ret_code_t FLASH_Init( void )
+void FLASH_Init( void )
 {
     nrf_drv_spi_config_t const spi_config =
     {
@@ -51,26 +50,17 @@ ret_code_t FLASH_Init( void )
         .mode           = NRF_DRV_SPI_MODE_0,
         .bit_order      = NRF_DRV_SPI_BIT_ORDER_MSB_FIRST, 
     };
-    
-    ret_code_t err_code;
-    
-    err_code = nrf_drv_spi_init(&m_spi_master_1, &spi_config, NULL, NULL);
+        
+    nrf_drv_spi_init(&m_spi_master_1, &spi_config, NULL, NULL);
      
-    if ( err_code != NRF_SUCCESS ) {
-        //NRF_LOG_DEBUG("FLASH_Init Fail:%d\r\n", err_code);
-    }
-    
-    return err_code;
 }
 
-ret_code_t FLASH_Get_ID( void )
+void FLASH_Print_ID( void )
 {
-    ret_code_t err_code;
     cmd[0] = CMD_READ_ID; //Get JEDEC ID
     memset(rx4, 0, sizeof(rx4));
-    err_code = nrf_drv_spi_transfer(&m_spi_master_1, cmd, sizeof(cmd), rx4, sizeof(rx4));
-    //NRF_LOG_DEBUG("MemID: %d Type: %d CAP: %d\r\n", rx4[1], rx4[2], rx4[3]); 
-    return err_code;
+    nrf_drv_spi_transfer(&m_spi_master_1, cmd, sizeof(cmd), rx4, sizeof(rx4));
+    SEGGER_RTT_printf(0, "MemID: %d Type: %d CAP: %d\r\n", rx4[1], rx4[2], rx4[3]); 
 }
 
 uint8_t FLASH_Read_Status( void )
@@ -156,6 +146,7 @@ uint8_t * FLASH_Page_Read( uint16_t pageN )
   tx4[3] =  address        & 0xFF;
   
   uint16_t i = 0;
+  
   nrf_drv_spi_transfer(&m_spi_master_1, tx4, sizeof(tx4), rxHalf, sizeof(rxHalf));
   for(i =   0; i < 128; i++) { rx256[i] = rxHalf[i+4]; };  
   
@@ -165,8 +156,44 @@ uint8_t * FLASH_Page_Read( uint16_t pageN )
   nrf_drv_spi_transfer(&m_spi_master_1, tx4, sizeof(tx4), rxHalf, sizeof(rxHalf));
   for(i = 128; i < 256; i++) { rx256[i] = rxHalf[(i-128)+4]; };  
   
-  NRF_LOG_HEXDUMP_DEBUG((uint8_t *)rx256, 256);
+  //NRF_LOG_HEXDUMP_DEBUG((uint8_t *)rx256, 256);
   
+  //SEGGER_RTT_WriteString(0, "Reading now!");  
+
+  for(i = 0;   i <  16; i++) { SEGGER_RTT_printf(0, "%d ", rx256[i]); }; SEGGER_RTT_WriteString(0, "\n");
+  for(i = 16;  i <  32; i++) { SEGGER_RTT_printf(0, "%d ", rx256[i]); }; SEGGER_RTT_WriteString(0, "\n");
+  for(i = 32;  i <  48; i++) { SEGGER_RTT_printf(0, "%d ", rx256[i]); }; SEGGER_RTT_WriteString(0, "\n");
+  for(i = 48;  i <  64; i++) { SEGGER_RTT_printf(0, "%d ", rx256[i]); }; SEGGER_RTT_WriteString(0, "\n");
+  
+  nrf_delay_ms(100);
+  
+  for(i = 64;  i <  80; i++) { SEGGER_RTT_printf(0, "%d ", rx256[i]); }; SEGGER_RTT_WriteString(0, "\n");
+  for(i = 80;  i <  96; i++) { SEGGER_RTT_printf(0, "%d ", rx256[i]); }; SEGGER_RTT_WriteString(0, "\n");
+  for(i = 96;  i < 112; i++) { SEGGER_RTT_printf(0, "%d ", rx256[i]); }; SEGGER_RTT_WriteString(0, "\n");
+  for(i = 112; i < 128; i++) { SEGGER_RTT_printf(0, "%d ", rx256[i]); }; SEGGER_RTT_WriteString(0, "\n");
+  
+  nrf_delay_ms(100);
+
+  for(i = 128; i < 144; i++) { SEGGER_RTT_printf(0, "%d ", rx256[i]); }; SEGGER_RTT_WriteString(0, "\n");
+  for(i = 144; i < 160; i++) { SEGGER_RTT_printf(0, "%d ", rx256[i]); }; SEGGER_RTT_WriteString(0, "\n");
+  for(i = 160; i < 176; i++) { SEGGER_RTT_printf(0, "%d ", rx256[i]); }; SEGGER_RTT_WriteString(0, "\n");
+  for(i = 176; i < 192; i++) { SEGGER_RTT_printf(0, "%d ", rx256[i]); }; SEGGER_RTT_WriteString(0, "\n");
+  
+  nrf_delay_ms(100);
+  
+  for(i = 192; i < 208; i++) { SEGGER_RTT_printf(0, "%d ", rx256[i]); }; SEGGER_RTT_WriteString(0, "\n");
+  for(i = 208; i < 224; i++) { SEGGER_RTT_printf(0, "%d ", rx256[i]); }; SEGGER_RTT_WriteString(0, "\n");
+  for(i = 224; i < 240; i++) { SEGGER_RTT_printf(0, "%d ", rx256[i]); }; SEGGER_RTT_WriteString(0, "\n");
+  for(i = 240; i < 256; i++) { SEGGER_RTT_printf(0, "%d ", rx256[i]); }; SEGGER_RTT_WriteString(0, "\n");
+
+  /*
+  SEGGER_RTT_printf(0, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n", \
+          rx256[i], rx256[i],rx256[i],rx256[i],rx256[i],rx256[i],rx256[i],rx256[i])
+    
+  for(i = 0; i < 256; i++) { SEGGER_RTT_printf(0, "%d ", rx256[i]); };  
+  
+  SEGGER_RTT_WriteString(0, "\n");
+  */ 
   return rx256;
 
 }
@@ -393,7 +420,7 @@ void FLASH_Erase( void )
       //NRF_LOG_DEBUG("Erase: FLASH is busy\r\n");
   }
   
-  NRF_LOG_DEBUG("Erase: Erasing Flash\r\n");
+  //NRF_LOG_DEBUG("Erase: Erasing Flash\r\n");
   
   cmd[0] = 0xC7;
   nrf_drv_spi_transfer(&m_spi_master_1, cmd, sizeof(cmd), NULL, 0); 
