@@ -64,7 +64,7 @@
                                                                                    // 0 = infinite advertizing                                                                                        
 #define CONN_CFG_TAG                     1                                          /**< A tag that refers to the BLE stack configuration we set with @ref sd_ble_cfg_set. Default tag is @ref BLE_CONN_CFG_TAG_DEFAULT. */
 
-#define MEAS_INTERVAL                    APP_TIMER_TICKS(3000)
+#define MEAS_INTERVAL                    APP_TIMER_TICKS(1000)
 
 #define SENSOR_CONTACT_DETECTED_INTERVAL APP_TIMER_TICKS(5000)                      /**< Sensor Contact Detected toggle interval (ticks). */
 
@@ -941,37 +941,38 @@ void FLASH_Write_Record( uint8_t wp[] )
   
 };
 
-void add_to_flash( uint16_t counter, \
-        uint8_t batt, uint8_t pressure, uint8_t temperature, \
-        uint8_t humidity, uint16_t lr, uint16_t lg, uint16_t lb, uint16_t lw,
-        uint16_t accelT )
+void add_to_flash( uint16_t counter, uint8_t batt,               \
+        uint8_t pressure, uint8_t temperature, uint8_t humidity, \
+        uint16_t l_white,                                        \
+        int16_t ax, int16_t ay, int16_t az )
 { 
 
     memset(fb, 0, sizeof(fb));
     
     //timestamp
-    fb[ 0] = (uint8_t) ( counter       & 0xff);
-    fb[ 1] = (uint8_t) ((counter >> 8) & 0xff);
+    fb[ 0] = (uint8_t) ( counter      & 0xff);
+    fb[ 1] = (uint8_t) ( counter >> 8 & 0xff);
     
     fb[ 2] = batt;
+    
     fb[ 3] = pressure;
     fb[ 4] = temperature;
     fb[ 5] = humidity;
     
-    fb[ 6] = (uint8_t) ( lr       & 0xff); 
-    fb[ 7] = (uint8_t) ( lr >> 8  & 0xff); 
+    fb[ 6] = (uint8_t) ( l_white      & 0xff ); 
+    fb[ 7] = (uint8_t) ( l_white >> 8 & 0xff ); 
     
-    fb[ 8] = (uint8_t) ( lg       & 0xff); 
-    fb[ 9] = (uint8_t) ( lg >> 8  & 0xff); 
+    fb[ 8] = (uint8_t) ( ax       & 0xff); 
+    fb[ 9] = (uint8_t) ( ax >> 8  & 0xff); 
     
-    fb[10] = (uint8_t) ( lb       & 0xff); 
-    fb[11] = (uint8_t) ( lb >> 8  & 0xff); 
+    fb[10] = (uint8_t) ( ay       & 0xff); 
+    fb[11] = (uint8_t) ( ay >> 8  & 0xff); 
     
-    fb[12] = (uint8_t) ( lw       & 0xff);
-    fb[13] = (uint8_t) ( lw >> 8  & 0xff); 
+    fb[12] = (uint8_t) ( az       & 0xff);
+    fb[13] = (uint8_t) ( az >> 8  & 0xff); 
     
-    fb[14] = (uint8_t) ( accelT       & 0xff);
-    fb[15] = (uint8_t) ( accelT >> 8  & 0xff); 
+    fb[14] = 0;
+    fb[15] = 0; 
 
     FLASH_Write_Record( fb );    
 }
@@ -1021,28 +1022,34 @@ static void update_fast(void)
     //Pressure, Temp, and Humidity
     BME280_Get_Data(resultPTH);
     
-    BMP280P8 = (uint8_t)( (resultPTH[0]/  10.00) - 10000.0 ); //need to add 1000 to the pressure. 
-    BMP280T8 = (uint8_t)( (resultPTH[1]/  10.00) - 200.0   ); //need to add 20 to the temp
+    BMP280P8 = (uint8_t)( (resultPTH[0]/  10.00) - 10000.0 ); //need to add 10000 to the pressure and then divide by 10. 
+    BMP280T8 = (uint8_t)( (resultPTH[1]/  10.00) - 200.0   ); //need to add 200 to the temp and then divide by 10
     BMP280H8 = (uint8_t)( (resultPTH[2]/1000.00)           );
     
     //light intensity
     VEML6040_Get_Data(resultVME);
+    //the different colors are largely useless - just get white
     
     //acceleration
     BMA280_Get_Data(resultBMA);
     
+    /*
     float ax = (float)resultBMA[0];
     float ay = (float)resultBMA[1];
-    float az = (float)resultBMA[2] - 16384.0f;//take off gravity
+    float az = (float)resultBMA[2];//take off gravity
     
     float accelT = (ax*ax) + (ay*ay) + (az*az);
+    
     accelT = sqrt(accelT);
+    */
     
     //SEGGER_RTT_printf(0, "x-axis offset = %d mg\n", (int16_t)(100.0f*(float)offsetX*FCres/256.0f));
-    
     //SEGGER_RTT_printf(0, "accel:%d\n", (uint16_t)accelT);
     
-    add_to_flash( heartbeat16, battery_level8, BMP280P8, BMP280T8, BMP280H8, resultVME[0], resultVME[1], resultVME[2], resultVME[3], (uint16_t)accelT );    
+    add_to_flash( heartbeat16, battery_level8,  \
+                  BMP280P8, BMP280T8, BMP280H8, \
+                  resultVME[3],                 \
+                  resultBMA[0], resultBMA[1], resultBMA[2] );    
     
     /*
     ret_code_t err_code = NRF_SUCCESS;
@@ -1124,13 +1131,14 @@ int main(void)
     nrf_delay_ms(500);
     
     //FLASH_Reset();    
-    //FLASH_Erase();
+    FLASH_Erase();
     
     GLOB_datastart = FLASH_Get_First_Available_Location();
     SEGGER_RTT_printf(0, "First empty page: %d\r\n", GLOB_datastart);
     
     flash_red();
     
+    /*
     uint16_t j = 0;
  
     for(j = 0; j < 100; j++) 
@@ -1138,6 +1146,7 @@ int main(void)
         nrf_delay_ms(100);
         FLASH_Page_Read(j);
     };
+    */
        
     /* The four basic functions are to:
      * (1) erase
@@ -1152,7 +1161,6 @@ int main(void)
      * In the same app, could chose to delete data
      * Could also flush data to pubnub?
     */ 
-    
     
     RTC1_timer_start();
     //advertising_start(erase_bonds);
