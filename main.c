@@ -58,11 +58,11 @@
 
 #define DEVICE_NAME                      "MENTAID"                                 /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME                "Stanford University"                     /**< Manufacturer. Will be passed to Device Information Service. */
-#define APP_ADV_INTERVAL                 1600                                      //The advertising interval (in units of 0.625 ms
+#define APP_ADV_INTERVAL                 1600                                      // The advertising interval (in units of 0.625 ms) 1600*0.625 = 1000 ms
                                                                                    // 3200 = 2 seconds
-#define APP_ADV_TIMEOUT_IN_SECONDS       2                                         // The advertizing timeout in units of seconds. Used to be 180 seconds
+#define APP_ADV_TIMEOUT_IN_SECONDS       100                                       // The advertizing timeout in units of seconds. Used to be 180 seconds
                                                                                    // 0 = infinite advertizing                                                                                        
-#define CONN_CFG_TAG                     1                                          /**< A tag that refers to the BLE stack configuration we set with @ref sd_ble_cfg_set. Default tag is @ref BLE_CONN_CFG_TAG_DEFAULT. */
+#define CONN_CFG_TAG                     1                                         //< A tag that refers to the BLE stack configuration we set with @ref sd_ble_cfg_set. Default tag is @ref BLE_CONN_CFG_TAG_DEFAULT. */
 
 #define MEAS_INTERVAL                    APP_TIMER_TICKS(1000)
 
@@ -94,7 +94,6 @@ static uint16_t  m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Handle of the cur
 
 static ble_bas_t m_bas;                                   /**< Structure used to identify the battery service. */
 static ble_hrs_t m_hrs;                                   /**< Structure used to identify the heart rate service. */
-
 static nrf_ble_gatt_t m_gatt;                             /**< Structure for gatt module*/
 
 //this uses the RTC1
@@ -113,7 +112,8 @@ static int32_t  resultPTH[3]; //PTH from sensor 1
 static int16_t  resultVME[4];
 static int16_t  resultBMA[3];
 
-static uint8_t  battery_level8 = 0;
+static uint8_t  battery_level8        = 0;
+static uint8_t  battery_level_Percent = 0;
 static uint8_t fb[16];
 
 uint8_t BMP280P8;
@@ -338,7 +338,6 @@ static void timeout_handler(void * p_context);
     
 static void RTC1_timer_init(void)
 {
-    //APP_TIMER_BUF_SIZE
     // Initialize timer module.
     err_code = app_timer_init();
     APP_ERROR_CHECK(err_code);
@@ -950,8 +949,8 @@ void add_to_flash( uint16_t counter, uint8_t batt,               \
     memset(fb, 0, sizeof(fb));
     
     //timestamp
-    fb[ 0] = (uint8_t) ( counter      & 0xff);
-    fb[ 1] = (uint8_t) ( counter >> 8 & 0xff);
+    fb[ 0] = (uint8_t) ( counter      & 0xff );
+    fb[ 1] = (uint8_t) ( counter >> 8 & 0xff );
     
     fb[ 2] = batt;
     
@@ -962,14 +961,14 @@ void add_to_flash( uint16_t counter, uint8_t batt,               \
     fb[ 6] = (uint8_t) ( l_white      & 0xff ); 
     fb[ 7] = (uint8_t) ( l_white >> 8 & 0xff ); 
     
-    fb[ 8] = (uint8_t) ( ax       & 0xff); 
-    fb[ 9] = (uint8_t) ( ax >> 8  & 0xff); 
+    fb[ 8] = (uint8_t) ( ax            & 0xff); 
+    fb[ 9] = (uint8_t) ( ax      >> 8  & 0xff); 
     
-    fb[10] = (uint8_t) ( ay       & 0xff); 
-    fb[11] = (uint8_t) ( ay >> 8  & 0xff); 
+    fb[10] = (uint8_t) ( ay            & 0xff); 
+    fb[11] = (uint8_t) ( ay      >> 8  & 0xff); 
     
-    fb[12] = (uint8_t) ( az       & 0xff);
-    fb[13] = (uint8_t) ( az >> 8  & 0xff); 
+    fb[12] = (uint8_t) ( az            & 0xff);
+    fb[13] = (uint8_t) ( az      >> 8  & 0xff); 
     
     fb[14] = 0;
     fb[15] = 0; 
@@ -979,23 +978,21 @@ void add_to_flash( uint16_t counter, uint8_t batt,               \
 
 static void update_battery(void)
 {            
-    
     //Battery ADC read
     //this will update Current_VBATT() via callback
     nrf_drv_saadc_sample(); 
     
     //convert to percent from voltage - 3.8V is full
-    //battery_level8  = (uint8_t )(100.00 * (float)Current_VBATT()/380.00);
+    battery_level_Percent  = (uint8_t)(100.00 * (float)Current_VBATT()/420.00);
     
     //for debugging let's record the actual voltage
     battery_level8 = (uint8_t)(Current_VBATT() - 300);
     //SEGGER_RTT_printf(0, "Battery: %d\n", battery_level8);
     
-    /*
     //bluetooth update
     
     ret_code_t err_code = NRF_SUCCESS;  
-    err_code = ble_bas_battery_level_update(&m_bas, battery_level);
+    err_code = ble_bas_battery_level_update(&m_bas, battery_level_Percent);
 
     if ((err_code != NRF_SUCCESS) &&
         (err_code != NRF_ERROR_INVALID_STATE) &&
@@ -1003,7 +1000,7 @@ static void update_battery(void)
         (err_code != BLE_ERROR_GATTS_SYS_ATTR_MISSING)) {
         APP_ERROR_HANDLER(err_code);
     } 
-    */
+    
 }
 
 static void update_fast(void)
@@ -1051,9 +1048,12 @@ static void update_fast(void)
                   resultVME[3],                 \
                   resultBMA[0], resultBMA[1], resultBMA[2] );    
     
-    /*
+    
     ret_code_t err_code = NRF_SUCCESS;
-    err_code = ble_hrs_heart_rate_measurement_send_3(&m_hrs, BMP280P, BMP280T, BMP280H);
+    err_code = ble_hrs_heart_rate_measurement_send_MAP(&m_hrs, heartbeat16, battery_level8, 
+                                                                BMP280P8, BMP280T8, BMP280H8, 
+                                                                resultVME[3], 
+                                                                resultBMA[0], resultBMA[1], resultBMA[2]);
 
     if ((err_code != NRF_SUCCESS) &&
         (err_code != NRF_ERROR_INVALID_STATE) &&
@@ -1063,7 +1063,7 @@ static void update_fast(void)
     {
         APP_ERROR_HANDLER(err_code);
     }
-    */
+    
 }
 
 static void timeout_handler(void * p_context)
@@ -1081,7 +1081,7 @@ int main(void)
     RTC1_timer_init();
     leds_init();
     
-    //bool erase_bonds;
+    bool erase_bonds = true;
     //buttons_leds_init(&erase_bonds);
     
     if( 1 == 2 ) {
@@ -1090,12 +1090,12 @@ int main(void)
         ble_stack_init(); //fire up the softdevice
     }
         
-    //gap_params_init();
-    //gatt_init();
-    //advertising_init();
-    //ble_services_init();
-    //conn_params_init();
-    //peer_manager_init();
+    gap_params_init();
+    gatt_init();
+    advertising_init();
+    ble_services_init();
+    conn_params_init();
+    peer_manager_init();
     
     //ADC subsystem 
     ADC_init();
@@ -1131,7 +1131,7 @@ int main(void)
     nrf_delay_ms(500);
     
     //FLASH_Reset();    
-    FLASH_Erase();
+    //FLASH_Erase();
     
     GLOB_datastart = FLASH_Get_First_Available_Location();
     SEGGER_RTT_printf(0, "First empty page: %d\r\n", GLOB_datastart);
@@ -1163,7 +1163,9 @@ int main(void)
     */ 
     
     RTC1_timer_start();
-    //advertising_start(erase_bonds);
+    
+    //controls visibility
+    advertising_start(erase_bonds);
      
     while( 1 ) 
     {
