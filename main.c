@@ -127,6 +127,8 @@ uint8_t batt_cycle = 0;
 
 ret_code_t err_code;
 
+bool SaveToFLASH = true;
+
 //LEDS
 //these are all defined in d52_BA.h and boards.c
 
@@ -433,7 +435,7 @@ static void ble_services_init(void)
     ble_hrs_init_t hrs_init;
     ble_bas_init_t bas_init;
     ble_dis_init_t dis_init;
-    uint8_t        body_sensor_location;
+    uint8_t body_sensor_location;
 
     // Initialize Heart Rate Service.
     body_sensor_location = BLE_HRS_BODY_SENSOR_LOCATION_WRIST;
@@ -449,9 +451,9 @@ static void ble_services_init(void)
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&hrs_init.hrs_hrm_attr_md.read_perm);
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&hrs_init.hrs_hrm_attr_md.write_perm);
     
-    // Body sensor location???
+    // Body sensor location
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&hrs_init.hrs_bsl_attr_md.read_perm);
-    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&hrs_init.hrs_bsl_attr_md.write_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&hrs_init.hrs_bsl_attr_md.write_perm);
 
     err_code = ble_hrs_init(&m_hrs, &hrs_init);
     APP_ERROR_CHECK(err_code);
@@ -584,8 +586,8 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
  */
 static void on_ble_evt(ble_evt_t * p_ble_evt)
 {
-    SEGGER_RTT_WriteString(0, "On_ble_evt\n");
-    SEGGER_RTT_printf(0, "Type1: %d\n", p_ble_evt->header.evt_id);
+    //SEGGER_RTT_WriteString(0, "On_ble_evt\n");
+    //SEGGER_RTT_printf(0, "Type1: %d\n", p_ble_evt->header.evt_id);
     
     switch (p_ble_evt->header.evt_id)
     {
@@ -604,8 +606,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
         //Type 17
         case BLE_GAP_EVT_DISCONNECTED:
              SEGGER_RTT_WriteString(0, "BLE_GAP_EVT_DISCONNECTED\n");
-            //NRF_LOG_INFO("Disconnected, reason %d.\r\n",
-            //              p_ble_evt->evt.gap_evt.params.disconnected.reason);
+            //NRF_LOG_INFO("Disconnected, reason %d.\r\n", p_ble_evt->evt.gap_evt.params.disconnected.reason);
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
             break; // BLE_GAP_EVT_DISCONNECTED
 
@@ -628,8 +629,38 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             break; // BLE_GATTS_EVT_TIMEOUT
 
         case BLE_GATTS_EVT_WRITE:
+            
             //this is for all data coming back from phone.....
             SEGGER_RTT_WriteString(0, "BLE_GATTS_EVT_WRITE\n");
+            
+            //uint8_t new_hex_status = 0;
+            
+            uint8_t * p_data = p_ble_evt->evt.gatts_evt.params.write.data;
+            //uint16_t length  = p_ble_evt->evt.gatts_evt.params.write.len;
+            uint8_t new_command = p_data[0];
+            
+            SEGGER_RTT_printf(0, "New command: %d\r\n", new_command);
+            
+            if( new_command == 32 )
+            {
+                SaveToFLASH = false;
+                SEGGER_RTT_WriteString(0, "Turning OFF save to FLASH\n");
+            } 
+            else if ( new_command == 33 )
+            {
+                SaveToFLASH = true;
+                SEGGER_RTT_WriteString(0, "Turning ON save to FLASH\n");
+            }
+            //ok, so what is the value of the characteristic now?
+            /*
+             err_code = ble_hrs_heart_rate_measurement_send_MAP(&m_hrs, heartbeat16, battery_level8, 
+                                                                BMP280P8, BMP280T8, BMP280H8, 
+                                                                resultVME[3], 
+                                                                resultBMA[0], resultBMA[1], resultBMA[2]);
+             
+             
+             */
+            //print it out.....
             break; // BLE_GATTS_EVT_TIMEOUT
             
         case BLE_EVT_USER_MEM_REQUEST:
@@ -640,7 +671,6 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 
         case BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST:
         {
-            //this should fire when there is a write request
             SEGGER_RTT_WriteString(0, "BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST\n");
             
             ble_gatts_evt_rw_authorize_request_t req;
@@ -662,6 +692,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
                     else
                     {
                         auth_reply.type = BLE_GATTS_AUTHORIZE_TYPE_READ;
+                        SEGGER_RTT_WriteString(0, "BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST - Read\n");
                     }
                     auth_reply.params.write.gatt_status = APP_FEATURE_NOT_SUPPORTED;
                     err_code = sd_ble_gatts_rw_authorize_reply(p_ble_evt->evt.gatts_evt.conn_handle,
@@ -673,7 +704,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 
 
         default:
-            SEGGER_RTT_WriteString(0, "Default\n");
+            //SEGGER_RTT_WriteString(0, "Default - some other number that is not handled\n");
             // No implementation needed.
             break;
     }
@@ -688,7 +719,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
  */
 static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
-    SEGGER_RTT_WriteString(0, "BLE event\n");
+    //SEGGER_RTT_WriteString(0, "ble_evt_dispatch\n");
     ble_conn_state_on_ble_evt(p_ble_evt);
     pm_on_ble_evt(p_ble_evt);
     ble_hrs_on_ble_evt(&m_hrs, p_ble_evt);
@@ -1047,6 +1078,8 @@ static void update_fast(void)
     BMP280T8 = (uint8_t)( (resultPTH[1]/  10.00) - 200.0   ); //need to add 200 to the temp and then divide by 10
     BMP280H8 = (uint8_t)( (resultPTH[2]/1000.00)           );
     
+    SEGGER_RTT_printf(0, "H:%d\n", (uint16_t)BMP280H8);
+    
     //light intensity
     VEML6040_Get_Data(resultVME);
     //the different colors are largely useless - just get white
@@ -1067,12 +1100,14 @@ static void update_fast(void)
     //SEGGER_RTT_printf(0, "x-axis offset = %d mg\n", (int16_t)(100.0f*(float)offsetX*FCres/256.0f));
     //SEGGER_RTT_printf(0, "accel:%d\n", (uint16_t)accelT);
     
-    add_to_flash( heartbeat16, battery_level8,  \
-                  BMP280P8, BMP280T8, BMP280H8, \
-                  resultVME[3],                 \
-                  resultBMA[0], resultBMA[1], resultBMA[2] );    
+    if( SaveToFLASH )
+    {
+        add_to_flash( heartbeat16, battery_level8,
+                        BMP280P8, BMP280T8, BMP280H8,
+                        resultVME[3],
+                        resultBMA[0], resultBMA[1], resultBMA[2] );    
     
-    
+    }
     ret_code_t err_code = NRF_SUCCESS;
     
     err_code = ble_hrs_heart_rate_measurement_send_MAP(&m_hrs, heartbeat16, battery_level8, 

@@ -121,9 +121,9 @@ void BME280_Get_Data(int32_t * resultPTH)
   readBytes(BME280_ADDRESS_1, BME280_PRESS_MSB, rawData, 8);  
   
   //Pressure
-  result[0] = (int32_t) (((uint32_t) rawData[0] << 16 | (uint32_t) rawData[1] << 8 | rawData[2]) >> 4);
-  result[1] = (int32_t) (((uint32_t) rawData[3] << 16 | (uint32_t) rawData[4] << 8 | rawData[5]) >> 4);
-  result[2] = (int16_t) (((uint16_t) rawData[6] <<  8 |            rawData[7]) );
+  result[0] = (uint32_t) (((uint32_t) rawData[0] << 16 | (uint32_t) rawData[1] << 8 | rawData[2]) >> 4);
+  result[1] = (uint32_t) (((uint32_t) rawData[3] << 16 | (uint32_t) rawData[4] << 8 | rawData[5]) >> 4);
+  result[2] = (uint16_t) (((uint16_t) rawData[6] <<  8 |            rawData[7]) );
     
   //Need t_fine for all three compensations
   adc_T = result[1];
@@ -136,6 +136,8 @@ void BME280_Get_Data(int32_t * resultPTH)
   resultPTH[0] = BME280_Compensate_P(result[0], t_fine);
   resultPTH[1] = BME280_Compensate_T(           t_fine);
   resultPTH[2] = BME280_Compensate_H(result[2], t_fine);
+  
+  //SEGGER_RTT_printf(0, "BME280:%d\n", result[2]);
   
   if ( SEGGER_BME )
       SEGGER_RTT_printf(0, "BME280:%d %d %d\n", resultPTH[0], resultPTH[1], resultPTH[2]);
