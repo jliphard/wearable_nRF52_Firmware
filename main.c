@@ -584,45 +584,66 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
  */
 static void on_ble_evt(ble_evt_t * p_ble_evt)
 {
+    SEGGER_RTT_WriteString(0, "On_ble_evt\n");
+    SEGGER_RTT_printf(0, "Type1: %d\n", p_ble_evt->header.evt_id);
+    
     switch (p_ble_evt->header.evt_id)
     {
+        //SEGGER_RTT_WriteString(0, "Write request");
+        //SEGGER_RTT_printf(0, "Type2: %d\n", p_ble_evt->header.evt_id);
+        
+        //Type 16
         case BLE_GAP_EVT_CONNECTED:
-            NRF_LOG_INFO("Connected.\r\n");
+            SEGGER_RTT_WriteString(0, "BLE_GAP_EVT_CONNECTED\n");
+            //NRF_LOG_INFO("Connected.\r\n");
             err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
             APP_ERROR_CHECK(err_code);
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             break; // BLE_GAP_EVT_CONNECTED
 
+        //Type 17
         case BLE_GAP_EVT_DISCONNECTED:
-            NRF_LOG_INFO("Disconnected, reason %d.\r\n",
-                          p_ble_evt->evt.gap_evt.params.disconnected.reason);
+             SEGGER_RTT_WriteString(0, "BLE_GAP_EVT_DISCONNECTED\n");
+            //NRF_LOG_INFO("Disconnected, reason %d.\r\n",
+            //              p_ble_evt->evt.gap_evt.params.disconnected.reason);
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
             break; // BLE_GAP_EVT_DISCONNECTED
 
         case BLE_GATTC_EVT_TIMEOUT:
+             SEGGER_RTT_WriteString(0, "BLE_GATTC_EVT_TIMEOUT\n");
             // Disconnect on GATT Client timeout event.
-            NRF_LOG_DEBUG("GATT Client Timeout.\r\n");
+            //NRF_LOG_DEBUG("GATT Client Timeout.\r\n");
             err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gattc_evt.conn_handle,
                                              BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
             APP_ERROR_CHECK(err_code);
             break; // BLE_GATTC_EVT_TIMEOUT
 
         case BLE_GATTS_EVT_TIMEOUT:
+             SEGGER_RTT_WriteString(0, "BLE_GATTS_EVT_TIMEOUT\n");
             // Disconnect on GATT Server timeout event.
-            NRF_LOG_DEBUG("GATT Server Timeout.\r\n");
+            //NRF_LOG_DEBUG("GATT Server Timeout.\r\n");
             err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gatts_evt.conn_handle,
                                              BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
             APP_ERROR_CHECK(err_code);
             break; // BLE_GATTS_EVT_TIMEOUT
 
+        case BLE_GATTS_EVT_WRITE:
+            //this is for all data coming back from phone.....
+            SEGGER_RTT_WriteString(0, "BLE_GATTS_EVT_WRITE\n");
+            break; // BLE_GATTS_EVT_TIMEOUT
+            
         case BLE_EVT_USER_MEM_REQUEST:
+            SEGGER_RTT_WriteString(0, "BLE_EVT_USER_MEM_REQUEST\n");
             err_code = sd_ble_user_mem_reply(m_conn_handle, NULL);
             APP_ERROR_CHECK(err_code);
             break; // BLE_EVT_USER_MEM_REQUEST
 
         case BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST:
         {
-            ble_gatts_evt_rw_authorize_request_t  req;
+            //this should fire when there is a write request
+            SEGGER_RTT_WriteString(0, "BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST\n");
+            
+            ble_gatts_evt_rw_authorize_request_t req;
             ble_gatts_rw_authorize_reply_params_t auth_reply;
 
             req = p_ble_evt->evt.gatts_evt.params.authorize_request;
@@ -636,6 +657,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
                     if (req.type == BLE_GATTS_AUTHORIZE_TYPE_WRITE)
                     {
                         auth_reply.type = BLE_GATTS_AUTHORIZE_TYPE_WRITE;
+                        SEGGER_RTT_WriteString(0, "BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST - Write\n");
                     }
                     else
                     {
@@ -651,6 +673,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 
 
         default:
+            SEGGER_RTT_WriteString(0, "Default\n");
             // No implementation needed.
             break;
     }
@@ -665,6 +688,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
  */
 static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
+    SEGGER_RTT_WriteString(0, "BLE event\n");
     ble_conn_state_on_ble_evt(p_ble_evt);
     pm_on_ble_evt(p_ble_evt);
     ble_hrs_on_ble_evt(&m_hrs, p_ble_evt);
