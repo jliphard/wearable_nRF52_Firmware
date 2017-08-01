@@ -1050,6 +1050,7 @@ static void update_fast(void)
     
     
     ret_code_t err_code = NRF_SUCCESS;
+    
     err_code = ble_hrs_heart_rate_measurement_send_MAP(&m_hrs, heartbeat16, battery_level8, 
                                                                 BMP280P8, BMP280T8, BMP280H8, 
                                                                 resultVME[3], 
@@ -1164,7 +1165,7 @@ int main(void)
     
     RTC1_timer_start();
     
-    //controls visibility
+    //controls visibility to bluetooth - not clear to me if advertizing internal is honored
     advertising_start(erase_bonds);
      
     while( 1 ) 
