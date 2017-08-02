@@ -128,6 +128,7 @@ uint8_t batt_cycle = 0;
 ret_code_t err_code;
 
 bool SaveToFLASH = true;
+bool SampleSensors = true;
 
 //LEDS
 //these are all defined in d52_BA.h and boards.c
@@ -651,6 +652,16 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
                 SaveToFLASH = true;
                 SEGGER_RTT_WriteString(0, "Turning ON save to FLASH\n");
             }
+            else if ( new_command == 12 )
+            {
+                SampleSensors = false;
+                SEGGER_RTT_WriteString(0, "Turning OFF sampling\n");
+            }
+            else if ( new_command == 13 )
+            {
+                SampleSensors = true;
+                SEGGER_RTT_WriteString(0, "Turning ON sampling\n");
+            }
             //ok, so what is the value of the characteristic now?
             /*
              err_code = ble_hrs_heart_rate_measurement_send_MAP(&m_hrs, heartbeat16, battery_level8, 
@@ -1061,6 +1072,13 @@ static void update_battery(void)
 static void update_fast(void)
 {
 
+    SEGGER_RTT_WriteString(0, "Tick\n");
+    
+    if( !SampleSensors ) return;
+    
+    //Green flashes means we are sampling
+    flash_green();
+    
     if ( batt_cycle > 3 ) 
     {
         update_battery();
@@ -1077,8 +1095,6 @@ static void update_fast(void)
     BMP280P8 = (uint8_t)( (resultPTH[0]/  10.00) - 10000.0 ); //need to add 10000 to the pressure and then divide by 10. 
     BMP280T8 = (uint8_t)( (resultPTH[1]/  10.00) - 200.0   ); //need to add 200 to the temp and then divide by 10
     BMP280H8 = (uint8_t)( (resultPTH[2]/1000.00)           );
-    
-    SEGGER_RTT_printf(0, "H:%d\n", (uint16_t)BMP280H8);
     
     //light intensity
     VEML6040_Get_Data(resultVME);
@@ -1130,7 +1146,6 @@ static void timeout_handler(void * p_context)
 {
     UNUSED_PARAMETER(p_context);
     //SEGGER_RTT_WriteString(0, "TH.\n"); 
-    flash_green();
     update_fast();
 }
 
