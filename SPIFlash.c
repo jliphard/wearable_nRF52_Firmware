@@ -59,6 +59,8 @@ static uint8_t rx256[256];
 static uint8_t rxHalf[4+128];
 static uint8_t txHalf[4+128];
 
+static uint8_t rx20[16+4];
+
 #define APP_IRQ_PRIORITY_LOW 3  //overrides definition elsewhere
 
 void FLASH_Init( void )
@@ -221,6 +223,34 @@ uint8_t * FLASH_Page_Read( uint16_t pageN )
   */ 
   return rx256;
 
+}
+
+void FLASH_Line_Read( uint16_t lineN, uint8_t *line )
+{
+  
+  if ( lineN >  65535 ) { 
+      return;
+  };
+  
+  int address = (uint32_t)lineN * 16 * 8; //16 * 8 bits per line
+  
+  tx4[0] = CMD_READ_DATA;
+  tx4[1] = (address >> 16) & 0xFF;
+  tx4[2] = (address >>  8) & 0xFF;
+  tx4[3] =  address        & 0xFF;
+
+  memset( rx20, 0, sizeof( rx20));
+
+  nrf_drv_spi_transfer(&m_spi_master_1, tx4, sizeof(tx4), rx20, sizeof(rx20));
+  
+  uint16_t i = 0;
+  
+  for(i = 4; i < 20; i++) { 
+      line[i-4] = rx20[i]; 
+      SEGGER_RTT_printf(0, "%d ", rx20[i]);
+  };
+  SEGGER_RTT_WriteString(0, "\n");
+  
 }
 
 void FLASH_Page_WriteTest( uint16_t pageN )
@@ -422,6 +452,7 @@ int page_to_address(int pn)
 
 //=====================================
 // convert a 24-bit address to a page number
+// get the 
 int address_to_page(int addr) 
 {
   return(addr >> 8);

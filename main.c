@@ -83,7 +83,7 @@
 #include "ble_advdata.h"
 #include "ble_advertising.h"
 #include "ble_bas.h"
-#include "ble_hrs.h"
+#include "ble_ma.h"
 #include "ble_dis.h"
 #include "ble_conn_params.h"
 #include "ble_conn_state.h"
@@ -118,6 +118,13 @@
 #include "VEML6040.h"    //light levels
 
 #include "SEGGER_RTT.h"
+
+#define BLE_UUID_MENTAID_SERVICE           0x180D 
+#define BLE_UUID_MENTAID_MEASUREMENT_CHAR  0x2A37
+#define BLE_UUID_BODY_SENSOR_LOCATION_CHAR 0x2A38
+
+//UUID string
+
 
 #define DEVICE_NAME                      "MENTAID"                                 /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME                "Stanford University"                     /**< Manufacturer. Will be passed to Device Information Service. */
@@ -156,7 +163,7 @@
 static uint16_t  m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Handle of the current connection. */
 
 static ble_bas_t m_bas;                                   /**< Structure used to identify the battery service. */
-static ble_hrs_t m_hrs;                                   /**< Structure used to identify the heart rate service. */
+static ble_ma_t m_ma;                                   /**< Structure used to identify the heart rate service. */
 static nrf_ble_gatt_t m_gatt;                             /**< Structure for gatt module*/
 
 //this uses the RTC1
@@ -164,7 +171,7 @@ APP_TIMER_DEF(m_timer_id);
 
 static ble_uuid_t m_adv_uuids[] = 
 {
-    {BLE_UUID_HEART_RATE_SERVICE,         BLE_UUID_TYPE_BLE},
+    {BLE_UUID_MENTAID_SERVICE,            BLE_UUID_TYPE_BLE},
     {BLE_UUID_BATTERY_SERVICE,            BLE_UUID_TYPE_BLE},
     {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE}
 }; /* Universally unique service identifiers. */
@@ -190,8 +197,11 @@ uint8_t batt_cycle = 0;
 
 ret_code_t err_code;
 
+//default hardware configuration
 bool SaveToFLASH   = true;
 bool SampleSensors = true;
+bool LiveStream    = true; //for testing
+bool PleaseFlush   = false;
 
 //LEDS
 //these are all defined in d52_BA.h and boards.c
@@ -392,7 +402,6 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
 
 static void timeout_handler(void * p_context);
 
-
 /**@brief Function for the Timer initialization.
  *
  * @details Initializes the timer module. This creates and starts application timers.
@@ -477,7 +486,7 @@ static void gatt_evt_handler(nrf_ble_gatt_t * p_gatt, nrf_ble_gatt_evt_t const *
         //             p_evt->params.att_mtu_effective);
     }
 
-    ble_hrs_on_gatt_evt(&m_hrs, p_evt);
+    ble_ma_on_gatt_evt(&m_ma, p_evt);
 }
 
 
@@ -496,30 +505,30 @@ static void gatt_init(void)
  */
 static void ble_services_init(void)
 {
-    ble_hrs_init_t hrs_init;
+    ble_ma_init_t  ma_init;
     ble_bas_init_t bas_init;
     ble_dis_init_t dis_init;
     uint8_t body_sensor_location;
 
     // Initialize Heart Rate Service.
-    body_sensor_location = BLE_HRS_BODY_SENSOR_LOCATION_WRIST;
+    body_sensor_location = 1;//BLE_MA_BODY_SENSOR_LOCATION_WRIST;
 
-    memset(&hrs_init, 0, sizeof(hrs_init));
+    memset(&ma_init, 0, sizeof(ma_init));
 
-    hrs_init.evt_handler                 = NULL;
-    hrs_init.is_sensor_contact_supported = true;
-    hrs_init.p_body_sensor_location      = &body_sensor_location;
+    ma_init.evt_handler                 = NULL;
+    ma_init.is_sensor_contact_supported = true;
+    ma_init.p_body_sensor_location      = &body_sensor_location;
 
     // Here the sec level for the Heart Rate Service can be changed/increased.
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&hrs_init.hrs_hrm_attr_md.cccd_write_perm);
-    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&hrs_init.hrs_hrm_attr_md.read_perm);
-    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&hrs_init.hrs_hrm_attr_md.write_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(     &ma_init.ma_attr_md.cccd_write_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&ma_init.ma_attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&ma_init.ma_attr_md.write_perm);
     
     // Body sensor location
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&hrs_init.hrs_bsl_attr_md.read_perm);
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&hrs_init.hrs_bsl_attr_md.write_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&ma_init.bsl_attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&ma_init.bsl_attr_md.write_perm);
 
-    err_code = ble_hrs_init(&m_hrs, &hrs_init);
+    err_code = ble_ma_init(&m_ma, &ma_init);
     APP_ERROR_CHECK(err_code);
 
     // Initialize Battery Service.
@@ -591,7 +600,7 @@ static void conn_params_init(void)
     cp_init.first_conn_params_update_delay = FIRST_CONN_PARAMS_UPDATE_DELAY;
     cp_init.next_conn_params_update_delay  = NEXT_CONN_PARAMS_UPDATE_DELAY;
     cp_init.max_conn_params_update_count   = MAX_CONN_PARAMS_UPDATE_COUNT;
-    cp_init.start_on_notify_cccd_handle    = m_hrs.hrm_handles.cccd_handle;
+    cp_init.start_on_notify_cccd_handle    = m_ma.ma_handles.cccd_handle;
     cp_init.disconnect_on_fail             = false;
     cp_init.evt_handler                    = on_conn_params_evt;
     cp_init.error_handler                  = conn_params_error_handler;
@@ -705,7 +714,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             
             SEGGER_RTT_printf(0, "New command: %d\r\n", new_command);
             
-            if( new_command == 32 )
+            if(       new_command == 32 )
             {
                 SaveToFLASH = false;
                 SEGGER_RTT_WriteString(0, "Turning OFF save to FLASH\n");
@@ -725,14 +734,27 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
                 SampleSensors = true;
                 SEGGER_RTT_WriteString(0, "Turning ON sampling\n");
             }
+            else if ( new_command == 34 )
+            {
+                LiveStream = false;
+                SEGGER_RTT_WriteString(0, "Turning OFF livestream\n");
+            }
+            else if ( new_command == 35 )
+            {
+                LiveStream = true;
+                SEGGER_RTT_WriteString(0, "Turning ON livestream\n");
+            }
+            else if ( new_command == 42 )
+            {
+                SEGGER_RTT_WriteString(0, "Flushing to phone\n");
+                PleaseFlush = true;  
+            }
             //ok, so what is the value of the characteristic now?
             /*
              err_code = ble_hrs_heart_rate_measurement_send_MAP(&m_hrs, heartbeat16, battery_level8, 
                                                                 BMP280P8, BMP280T8, BMP280H8, 
                                                                 resultVME[3], 
                                                                 resultBMA[0], resultBMA[1], resultBMA[2]);
-             
-             
              */
             //print it out.....
             break; // BLE_GATTS_EVT_TIMEOUT
@@ -796,7 +818,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
     //SEGGER_RTT_WriteString(0, "ble_evt_dispatch\n");
     ble_conn_state_on_ble_evt(p_ble_evt);
     pm_on_ble_evt(p_ble_evt);
-    ble_hrs_on_ble_evt(&m_hrs, p_ble_evt);
+    ble_ma_on_ble_evt(&m_ma, p_ble_evt);
     ble_bas_on_ble_evt(&m_bas, p_ble_evt);
     ble_conn_params_on_ble_evt(p_ble_evt);
     bsp_btn_ble_on_ble_evt(p_ble_evt);
@@ -1023,7 +1045,7 @@ static void power_manage(void)
 //=====================================
 void FLASH_Write_Record( uint8_t wp[] )
 {
-  
+  //we write in blocks of 16 lines.
   if( record_counter < 16 )
   {
     //keep adding to buffer...
@@ -1069,9 +1091,31 @@ void FLASH_Write_Record( uint8_t wp[] )
   
 };
 
-void add_to_flash( uint16_t counter, uint8_t batt,               \
-        uint8_t pressure, uint8_t temperature, uint8_t humidity, \
-        uint16_t l_white,                                        \
+static void Send_Via_BLE( uint8_t * data )
+{
+    //pack in the GLOB_datastart
+    //and then send
+    
+    data[14] = (uint8_t) ( GLOB_datastart       & 0xff);
+    data[15] = (uint8_t) ( GLOB_datastart >> 8  & 0xff); 
+
+    ret_code_t err_code = NRF_SUCCESS;
+        
+    err_code = ma_measurement_send_16( &m_ma, data );
+
+    if ((err_code != NRF_SUCCESS) &&
+        (err_code != NRF_ERROR_INVALID_STATE) &&
+        (err_code != NRF_ERROR_RESOURCES) &&
+        (err_code != BLE_ERROR_GATTS_SYS_ATTR_MISSING)
+       )
+    {
+        APP_ERROR_HANDLER(err_code);
+    }
+}
+
+void save_or_stream( uint8_t action, uint16_t counter, uint8_t batt, \
+        uint8_t pressure, uint8_t temperature, uint8_t humidity,     \
+        uint16_t l_white,                                            \
         int16_t ax, int16_t ay, int16_t az )
 { 
 
@@ -1102,7 +1146,19 @@ void add_to_flash( uint16_t counter, uint8_t batt,               \
     fb[14] = 0;
     fb[15] = 0; 
 
-    FLASH_Write_Record( fb );    
+    if( action == 0 ) //save only
+    {
+        FLASH_Write_Record( fb );  
+    }
+    else if (action == 1 ) //send only
+    {
+        Send_Via_BLE( fb ); 
+    }
+    else if (action == 2) //do both
+    {
+        FLASH_Write_Record( fb ); 
+        Send_Via_BLE( fb ); 
+    }
 }
 
 static void update_battery(void)
@@ -1119,7 +1175,6 @@ static void update_battery(void)
     //SEGGER_RTT_printf(0, "Battery: %d\n", battery_level8);
     
     //bluetooth update
-    
     ret_code_t err_code = NRF_SUCCESS;  
     err_code = ble_bas_battery_level_update(&m_bas, battery_level_Percent);
 
@@ -1135,9 +1190,11 @@ static void update_battery(void)
 static void update_fast(void)
 {
 
-    SEGGER_RTT_WriteString(0, "Tick\n");
+    if( !SampleSensors ) return; //stop doing anything, basically. Useful for flushing data.
+    //since when we are not sampling, it is pointless to save or stream, we do neither. 
+    //we also stop the slow battery loop.
     
-    if( !SampleSensors ) return;
+    SEGGER_RTT_WriteString(0, "Tick\n");
     
     //Green flashes means we are sampling
     flash_green();
@@ -1178,30 +1235,35 @@ static void update_fast(void)
     
     //SEGGER_RTT_printf(0, "x-axis offset = %d mg\n", (int16_t)(100.0f*(float)offsetX*FCres/256.0f));
     //SEGGER_RTT_printf(0, "accel:%d\n", (uint16_t)accelT);
+        
+    uint8_t action = 0;
     
-    if( SaveToFLASH )
+    if( SaveToFLASH && LiveStream )
     {
-        add_to_flash( heartbeat16, battery_level8,
-                        BMP280P8, BMP280T8, BMP280H8,
-                        resultVME[3],
-                        resultBMA[0], resultBMA[1], resultBMA[2] );    
-    
+        action = 2;
+        save_or_stream( action, heartbeat16, battery_level8,
+                      BMP280P8, BMP280T8, BMP280H8,
+                      resultVME[3],
+                      resultBMA[0], resultBMA[1], resultBMA[2] );    
     }
-    ret_code_t err_code = NRF_SUCCESS;
+    else if ( SaveToFLASH && !LiveStream ) //save only
+    {
+        action = 0;
+        save_or_stream( action, heartbeat16, battery_level8,
+                      BMP280P8, BMP280T8, BMP280H8,
+                      resultVME[3],
+                      resultBMA[0], resultBMA[1], resultBMA[2] );    
+    }
+    else if ( !SaveToFLASH && LiveStream ) //stream only
+    {
+        action = 1;
+        save_or_stream( action, heartbeat16, battery_level8,
+                      BMP280P8, BMP280T8, BMP280H8,
+                      resultVME[3],
+                      resultBMA[0], resultBMA[1], resultBMA[2] );    
+    }
     
-    err_code = ble_hrs_heart_rate_measurement_send_MAP(&m_hrs, heartbeat16, battery_level8, 
-                                                                BMP280P8, BMP280T8, BMP280H8, 
-                                                                resultVME[3], 
-                                                                resultBMA[0], resultBMA[1], resultBMA[2]);
 
-    if ((err_code != NRF_SUCCESS) &&
-        (err_code != NRF_ERROR_INVALID_STATE) &&
-        (err_code != NRF_ERROR_RESOURCES) &&
-        (err_code != BLE_ERROR_GATTS_SYS_ATTR_MISSING)
-       )
-    {
-        APP_ERROR_HANDLER(err_code);
-    }
     
 }
 
@@ -1276,16 +1338,6 @@ int main(void)
     
     flash_red();
     
-    /*
-    uint16_t j = 0;
- 
-    for(j = 0; j < 100; j++) 
-    {  
-        nrf_delay_ms(100);
-        FLASH_Page_Read(j);
-    };
-    */
-       
     /* The four basic functions are to:
      * (1) erase
      * (2) record
@@ -1307,6 +1359,43 @@ int main(void)
      
     while( 1 ) 
     {
+        if ( PleaseFlush ) {
+            
+                bool OldStateSampleSensors = SampleSensors;
+                bool OldStateSaveToFLASH   = SaveToFLASH;
+                bool OldStateLiveStream    = LiveStream;
+                
+                SampleSensors = false;
+                SaveToFLASH   = false;
+                LiveStream    = false;
+                
+                //RTC1_timer_stop();
+                       
+                static uint8_t lR[16];
+    
+                //how much to flush
+                SEGGER_RTT_printf(0, "Glob: %d\r\n", GLOB_datastart);
+                
+                uint16_t lastLineWithData = GLOB_datastart;
+                                
+                for( uint16_t j = 0; j < lastLineWithData; j++) 
+                {  
+                    nrf_delay_ms(100);
+                    FLASH_Line_Read(j, lR);
+                    //pack in the page data
+                    lR[14] = (uint8_t) ( j       & 0xff);
+                    lR[15] = (uint8_t) ( j >> 8  & 0xff); 
+                    ma_measurement_send_16( &m_ma, lR );
+                };
+                               
+                //and go back to previous state....
+                SampleSensors = OldStateSampleSensors;
+                SaveToFLASH   = OldStateSaveToFLASH;
+                LiveStream    = OldStateLiveStream;
+                
+                PleaseFlush = false;
+        }
+        
         __WFE();
     };
      

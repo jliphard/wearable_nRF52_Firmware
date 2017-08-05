@@ -42,6 +42,8 @@ void FLASH_Print_ID( void );
 uint16_t FLASH_Get_First_Available_Location( void ); 
 void FLASH_Write_Record( uint8_t wp[] );
 uint8_t * FLASH_Page_Read( uint16_t pageN );
+void FLASH_Line_Read( uint16_t lineN, uint8_t *line );
+
 void FLASH_Page_Write( uint16_t pageN, uint8_t *wp );
 bool FLASH_Set_Write_Enable( void );
 bool FLASH_Page_Is_Empty( uint16_t pageN );

@@ -17,6 +17,7 @@ SRC_FILES += \
   $(PROJ_DIR)/SPIFlash.c \
   $(PROJ_DIR)/VEML6040.c \
   $(PROJ_DIR)/BMA280.c \
+  $(PROJ_DIR)/ble_ma.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_serial.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_frontend.c \
   $(SDK_ROOT)/components/libraries/button/app_button.c \

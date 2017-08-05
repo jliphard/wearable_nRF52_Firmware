@@ -68,7 +68,7 @@ _build/nrf52832_xxaa_main.c.o: /Users/janliphardt/GH_MENTAID//main.c \
  /ARM/nRF5_SDK_13//components/ble/ble_advertising/ble_advertising.h \
  /ARM/nRF5_SDK_13//components/softdevice/s132/headers/ble_gattc.h \
  /ARM/nRF5_SDK_13//components/ble/ble_services/ble_bas/ble_bas.h \
- /ARM/nRF5_SDK_13//components/ble/ble_services/ble_hrs/ble_hrs.h \
+ /Users/janliphardt/GH_MENTAID//ble_ma.h \
  /ARM/nRF5_SDK_13//components/ble/nrf_ble_gatt/nrf_ble_gatt.h \
  /ARM/nRF5_SDK_13//components/libraries/util/sdk_errors.h \
  /ARM/nRF5_SDK_13//components/ble/ble_services/ble_dis/ble_dis.h \
@@ -274,7 +274,7 @@ _build/nrf52832_xxaa_main.c.o: /Users/janliphardt/GH_MENTAID//main.c \
 
 /ARM/nRF5_SDK_13//components/ble/ble_services/ble_bas/ble_bas.h:
 
-/ARM/nRF5_SDK_13//components/ble/ble_services/ble_hrs/ble_hrs.h:
+/Users/janliphardt/GH_MENTAID//ble_ma.h:
 
 /ARM/nRF5_SDK_13//components/ble/nrf_ble_gatt/nrf_ble_gatt.h:
 

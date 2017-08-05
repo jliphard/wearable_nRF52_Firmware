@@ -25,6 +25,8 @@
       <in>SPIFlash.h</in>
       <in>VEML6040.c</in>
       <in>VEML6040.h</in>
+      <in>ble_ma.c</in>
+      <in>ble_ma.h</in>
       <in>main.c</in>
     </df>
   </logicalFolder>
