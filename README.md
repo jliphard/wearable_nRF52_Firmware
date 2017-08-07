@@ -1,12 +1,12 @@
-# MENTAID
+# MENTAID firmware
 
-1/ Right now, code does not use the softdevice, since it's very hard to debug with the softdevice running.
+This is the firmware for a Stanford University-funded wearable. The wearable collects information from about sensors, logs this information, and can send it into the cloud if and when the wearer wishes to do so. The iOS code is also availible, please see https://github.com/jliphard/wearable_nRF52_iOS). 
 
-2/ The ADC, I2C/TWI, BME280, and the SPI FLASH are functional and tested. 
+The code is under very active development, so expect thimngs to change rapidly without notice. 
 
-3/ The code should also work with the softdevice/bluetooth, but i've been focussing on basic functionality.
+1/ The ADC, I2C/TWI, BME280, and the SPI FLASH are functional and tested. 
 
-4/ The goal right now is to have the device:
+2/ The goal right now is to have the device:
 
 _Goal 1_ - Baseline/robust datalogging
 *Sample all sensors once per min
@@ -16,5 +16,4 @@ _Goal 1_ - Baseline/robust datalogging
 
 _Goal 2_ - Minimal BLE functionality. Upon system start, advertize BLE for 100 secs. If connect, then allow iOS BLE app to send commands, such as Erase Memory, or Upload all data. If not connect, just datalog as in use case 1. One connection drops, begin to datalog.
 
-_Goal 3_ - Get good time/date/location from iPhone.
-
+_Goal 3_ - Get good time/date/location from iPhone once in while to facilitate data analysis. Key for the GPC is velocitiy, since that helps us to understand if the weater is cycling, driving, walking and so forth. Out of privacy concerns, we do not save or transmit GPS lat/lon location data.
