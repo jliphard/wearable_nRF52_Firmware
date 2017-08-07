@@ -1,8 +1,6 @@
 # MENTAID firmware
 
-This is the firmware for a Stanford University-funded wearable. The wearable collects information from about sensors, logs this information, and can send it into the cloud if and when the wearer wishes to do so. The iOS code is also availible, please see https://github.com/jliphard/wearable_nRF52_iOS). 
-
-The code is under very active development, so expect thimngs to change rapidly without notice. 
+This is the firmware for a Stanford University-funded wearable. The wearable collects information from about 10 sensors, logs this information, and can send it into the cloud if and when the wearer wishes to do so. The iOS code is also available, please see https://github.com/jliphard/wearable_nRF52_iOS). The code is under very active development, so expect thimngs to change rapidly without notice. 
 
 1/ The ADC, I2C/TWI, BME280, and the SPI FLASH are functional and tested. 
 
