@@ -201,7 +201,10 @@ ret_code_t err_code;
 bool SaveToFLASH   = false;
 bool SampleSensors = true;
 bool LiveStream    = true; //for testing
+
+//more complex commands 
 bool PleaseFlush   = false;
+bool PleaseWipe    = false;
 
 //LEDS
 //these are all defined in d52_BA.h and boards.c
@@ -748,6 +751,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
                 SaveToFLASH = true;
                 update_status_flags();
                 SEGGER_RTT_WriteString(0, "Turning ON save to FLASH\n");
+                //if the user just wiped memory, at this point we should figure out where the next available memory slot is
             }
             else if ( new_command == 12 )
             {
@@ -777,6 +781,11 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             {
                 SEGGER_RTT_WriteString(0, "Flushing to phone\n");
                 PleaseFlush = true;  
+            }
+            else if ( new_command == 43 )
+            {
+                SEGGER_RTT_WriteString(0, "Wiping my memory. Good afternoon, gentlemen. I am a HAL 9000 computer\n");
+                PleaseWipe = true;  
             }
             //ok, so what is the value of the characteristic now?
             /*
@@ -1156,6 +1165,8 @@ void save_or_stream( uint8_t action, uint16_t counter, uint8_t batt, \
     
     fb[ 2] = batt;
     
+    //SEGGER_RTT_printf(0, "battery_volt save: %d\n", batt);
+    
     fb[ 3] = pressure;
     fb[ 4] = temperature;
     fb[ 5] = humidity;
@@ -1197,16 +1208,20 @@ static void update_battery(void)
     nrf_drv_saadc_sample(); 
     
     //convert to percent from voltage - 3.8V is full
-    battery_level_Percent  = (uint8_t)(100.00 * (float)Current_VBATT()/420.00);
+    //sometimes this is zero for no good reason, but Current_VBATT() is clearly nonzero
+    //FIX FIX FIX
+    battery_level_Percent = (uint8_t)(100.00 * (float)Current_VBATT()/420.00);
+    //SEGGER_RTT_printf(0, "battery_percent: %d\n", battery_level_Percent);
     
     //for debugging let's record the actual voltage
     battery_level8 = (uint8_t)(Current_VBATT() - 300);
-    //SEGGER_RTT_printf(0, "Battery: %d\n", battery_level8);
+    //SEGGER_RTT_printf(0, "battery_level8: %d\n", battery_level8);
     
     update_status_flags();
             
     //bluetooth update
     ret_code_t err_code = NRF_SUCCESS;  
+    
     err_code = ble_bas_battery_level_update(&m_bas, battery_level_Percent);
 
     if ((err_code != NRF_SUCCESS) &&
@@ -1396,6 +1411,7 @@ int main(void)
     
     while( 1 ) 
     {
+        //upload all stored data to phone, for plotting/cloud upload
         if ( PleaseFlush ) {
             
                 bool OldStateSampleSensors = SampleSensors;
@@ -1424,17 +1440,6 @@ int main(void)
                     
                     //cannot send faster than the connection internal, which is 50 ms
                     ma_measurement_send_16( &m_ma, lR );
-                    
-                    /*
-                    SEGGER_RTT_WriteString(0, "Sent...\n");
-
-                    for(uint16_t j = 0; j < 16; j++) 
-                    { 
-                        SEGGER_RTT_printf(0, "%d ", lR[j]);
-                    };
-        
-                    SEGGER_RTT_WriteString(0, "\n");
-                    */
                 };
     
                 //and go back to previous state....
@@ -1443,6 +1448,35 @@ int main(void)
                 LiveStream    = OldStateLiveStream;
                 
                 PleaseFlush = false;
+        }
+        
+        //Erase the NOR FLASH completely
+        if ( PleaseWipe ) {
+            
+                bool OldStateSampleSensors = SampleSensors;
+                bool OldStateSaveToFLASH   = SaveToFLASH;
+                bool OldStateLiveStream    = LiveStream;
+                
+                SampleSensors = false;
+                SaveToFLASH   = false;
+                LiveStream    = false;
+                
+                FLASH_Erase();
+                //wait for this to complete
+                //not sure how long
+                GLOB_datastart = FLASH_Get_First_Available_Location();
+                SEGGER_RTT_printf(0, "First empty page: %d\r\n", GLOB_datastart);
+    
+                if( GLOB_datastart != 0) {
+                    SEGGER_RTT_printf(0, "Ooops, this really should be zero after wipe: %d\r\n", GLOB_datastart);
+                }
+                
+                //and go back to previous state....
+                SampleSensors = OldStateSampleSensors;
+                SaveToFLASH   = OldStateSaveToFLASH;
+                LiveStream    = OldStateLiveStream;
+                
+                PleaseWipe = false;
         }
         
         __WFE();
