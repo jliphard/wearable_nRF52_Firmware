@@ -232,7 +232,7 @@ void FLASH_Line_Read( uint16_t lineN, uint8_t *line )
       return;
   };
   
-  int address = (uint32_t)lineN * 16 * 8; //16 * 8 bits per line
+  int address = (uint32_t)lineN * 16; //* 8; //16 * 8 bits per line
   
   tx4[0] = CMD_READ_DATA;
   tx4[1] = (address >> 16) & 0xFF;
@@ -243,13 +243,13 @@ void FLASH_Line_Read( uint16_t lineN, uint8_t *line )
 
   nrf_drv_spi_transfer(&m_spi_master_1, tx4, sizeof(tx4), rx20, sizeof(rx20));
   
-  uint16_t i = 0;
+  //uint16_t i = 0;
   
-  for(i = 4; i < 20; i++) { 
+  for(uint16_t i = 4; i < 20; i++) { 
       line[i-4] = rx20[i]; 
-      SEGGER_RTT_printf(0, "%d ", rx20[i]);
+      //SEGGER_RTT_printf(0, "%d ", rx20[i]);
   };
-  SEGGER_RTT_WriteString(0, "\n");
+  //SEGGER_RTT_WriteString(0, "\n");
   
 }
 

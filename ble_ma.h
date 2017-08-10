@@ -83,7 +83,7 @@ extern "C" {
 /**@brief Mentaid Service event type. */
 typedef enum
 {
-    BLE_MA_EVT_NOTIFICATION_ENABLED,                   /**< Mentaid value notification enabled event. */
+    BLE_MA_EVT_NOTIFICATION_ENABLED,                   /**< Mentaid value notification enabled event.  */
     BLE_MA_EVT_NOTIFICATION_DISABLED                   /**< Mentaid value notification disabled event. */
 } ble_ma_evt_type_t;
 
@@ -104,26 +104,31 @@ typedef void (*ble_ma_evt_handler_t) (ble_ma_t * p_ma, ble_ma_evt_t * p_evt);
 typedef struct
 {
     ble_ma_evt_handler_t         evt_handler;                                          /**< Event handler to be called for handling events in the Mentaid Service. */
-    bool                         is_sensor_contact_supported;                          /**< Determines if sensor contact detection is to be supported. */
-    uint8_t *                    p_body_sensor_location;                               /**< If not NULL, initial value of the Body Sensor Location characteristic. */
-    ble_srv_cccd_security_mode_t ma_attr_md;                                           /**< Initial security level for heart rate service measurement attribute */
-    ble_srv_security_mode_t      bsl_attr_md;                                          /**< Initial security level for body sensor location attribute */
+    uint8_t *                    p_board_state;                                        /**< If not NULL, initial value of the firmware state characteristic. */
+    ble_srv_cccd_security_mode_t ma_attr_md;                                           /**< Initial security level for service measurement attribute */
+    ble_srv_security_mode_t      command_attr_md;                                      /**< Initial security level for the command attribute */
+    ble_srv_security_mode_t      status_attr_md;                                       /**< Initial security level for the status attribute */
+    uint8_t                      current_status;                                       /**< Current status of the board */
 } ble_ma_init_t;
 
 /**@brief Mentaid Service structure. This contains various status information for the service. */
 struct ble_ma_s
 {
     ble_ma_evt_handler_t         evt_handler;                                          /**< Event handler to be called for handling events in the Mentaid Service. */
-    bool                         is_expended_energy_supported;                         /**< TRUE if Expended Energy measurement is supported. */
-    bool                         is_sensor_contact_supported;                          /**< TRUE if sensor contact detection is supported. */
     uint16_t                     service_handle;                                       /**< Handle of Mentaid Service (as provided by the BLE stack). */
+    uint8_t                      current_status;                                       /**< Current status of the board */
     ble_gatts_char_handles_t     ma_handles;                                           /**< Handles related to the Mentaid Measurement characteristic. */
-    ble_gatts_char_handles_t     bsl_handles;                                          /**< Handles related to the Body Sensor Location characteristic. */
-    ble_gatts_char_handles_t     hrcp_handles;                                         /**< Handles related to the Mentaid Control Point characteristic. */
+    ble_gatts_char_handles_t     command_handles;                                      /**< Handles related to the Mentaid Command characteristic. */
+    ble_gatts_char_handles_t     status_handles;                                       /**< Handles related to the Mentaid Status characteristic. */
     uint16_t                     conn_handle;                                          /**< Handle of the current connection (as provided by the BLE stack, is BLE_CONN_HANDLE_INVALID if not in a connection). */
-    bool                         is_sensor_contact_detected;                           /**< TRUE if sensor contact has been detected. */
     uint8_t                      max_ma_len;                                           /**< Current maximum MA measurement length, adjusted according to the current ATT MTU. */
 };
+
+static uint32_t mentaid_measurement_char_add(ble_ma_t * p_ma, const ble_ma_init_t * p_ma_init);
+
+static uint32_t mentaid_command_char_add(ble_ma_t * p_ma, const ble_ma_init_t * p_ma_init);
+
+static uint32_t mentaid_status_char_add(ble_ma_t * p_ma, const ble_ma_init_t * p_ma_init);
 
 /**@brief Function for initializing the Mentaid Service.
  *
@@ -193,8 +198,12 @@ void ble_ma_sensor_contact_detected_update(ble_ma_t * p_ma, bool is_sensor_conta
  *
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
-uint32_t ble_ma_body_sensor_location_set(ble_ma_t * p_ma, uint8_t body_sensor_location);
-uint32_t ble_ma_body_sensor_location_get(ble_ma_t * p_ma);
+
+//this changes the value of the status characteristic
+uint32_t ble_ma_send_status(ble_ma_t * p_ma, uint8_t status);
+
+//uint32_t ble_ma_body_sensor_location_set(ble_ma_t * p_ma, uint8_t body_sensor_location);
+//uint32_t ble_ma_body_sensor_location_get(ble_ma_t * p_ma);
 
 
 #ifdef __cplusplus

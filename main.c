@@ -120,8 +120,8 @@
 #include "SEGGER_RTT.h"
 
 #define BLE_UUID_MENTAID_SERVICE           0x180D 
-#define BLE_UUID_MENTAID_MEASUREMENT_CHAR  0x2A37
-#define BLE_UUID_BODY_SENSOR_LOCATION_CHAR 0x2A38
+//#define BLE_UUID_MENTAID_MEASUREMENT_CHAR  0x2A37
+//#define BLE_UUID_BODY_SENSOR_LOCATION_CHAR 0x2A38
 
 //UUID string
 
@@ -138,8 +138,8 @@
 
 #define SENSOR_CONTACT_DETECTED_INTERVAL APP_TIMER_TICKS(5000)                      /**< Sensor Contact Detected toggle interval (ticks). */
 
-#define MIN_CONN_INTERVAL                MSEC_TO_UNITS(400, UNIT_1_25_MS)           /**< Minimum acceptable connection interval (0.40 seconds). */
-#define MAX_CONN_INTERVAL                MSEC_TO_UNITS(650, UNIT_1_25_MS)           /**< Maximum acceptable connection interval (0.65 second). */
+#define MIN_CONN_INTERVAL                MSEC_TO_UNITS( 30, UNIT_1_25_MS)           /**< Minimum acceptable connection interval (0.03 seconds). */
+#define MAX_CONN_INTERVAL                MSEC_TO_UNITS(200, UNIT_1_25_MS)           /**< Maximum acceptable connection interval (0.65 second). */
 #define SLAVE_LATENCY                    0                                          /**< Slave latency. */
 #define CONN_SUP_TIMEOUT                 MSEC_TO_UNITS(4000, UNIT_10_MS)            /**< Connection supervisory timeout (4 seconds). */
 
@@ -163,7 +163,7 @@
 static uint16_t  m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Handle of the current connection. */
 
 static ble_bas_t m_bas;                                   /**< Structure used to identify the battery service. */
-static ble_ma_t m_ma;                                   /**< Structure used to identify the heart rate service. */
+static ble_ma_t m_ma;                                     /**< Structure used to identify the mentaid service. */
 static nrf_ble_gatt_t m_gatt;                             /**< Structure for gatt module*/
 
 //this uses the RTC1
@@ -198,7 +198,7 @@ uint8_t batt_cycle = 0;
 ret_code_t err_code;
 
 //default hardware configuration
-bool SaveToFLASH   = true;
+bool SaveToFLASH   = false;
 bool SampleSensors = true;
 bool LiveStream    = true; //for testing
 bool PleaseFlush   = false;
@@ -499,35 +499,52 @@ static void gatt_init(void)
 }
 
 
+// Mentaid Measurement flag bits
+#define MA_FLAG_SAVE_TO_FLASH       (0x01 << 0)                           
+#define MA_FLAG_SAMPLE_SENSORS      (0x01 << 1)
+#define MA_FLAG_LIVESTREAM          (0x01 << 2)                           
+
 /**@brief Function for initializing services that will be used by the application.
  *
- * @details Initialize the Heart Rate, Battery and Device Information services.
+ * @details Initialize the Mentaid, Battery and Device Information services.
  */
 static void ble_services_init(void)
 {
-    ble_ma_init_t  ma_init;
-    ble_bas_init_t bas_init;
-    ble_dis_init_t dis_init;
-    uint8_t body_sensor_location;
+    ble_ma_init_t   ma_init;  //this one includes data, status, and command
+    ble_bas_init_t  bas_init; //battery
+    ble_dis_init_t  dis_init; //device information
+    
+    //uint8_t body_sensor_location;
 
     // Initialize Heart Rate Service.
-    body_sensor_location = 1;//BLE_MA_BODY_SENSOR_LOCATION_WRIST;
+    //body_sensor_location = 1;//BLE_MA_BODY_SENSOR_LOCATION_WRIST;
 
     memset(&ma_init, 0, sizeof(ma_init));
 
-    ma_init.evt_handler                 = NULL;
-    ma_init.is_sensor_contact_supported = true;
-    ma_init.p_body_sensor_location      = &body_sensor_location;
-
-    // Here the sec level for the Heart Rate Service can be changed/increased.
+    ma_init.evt_handler = NULL;
+    
+    // Here the sec level for the Mentaid Service can be changed/increased.
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(     &ma_init.ma_attr_md.cccd_write_perm);
+    
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&ma_init.ma_attr_md.read_perm);
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&ma_init.ma_attr_md.write_perm);
     
-    // Body sensor location
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&ma_init.bsl_attr_md.read_perm);
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&ma_init.bsl_attr_md.write_perm);
+    // Command
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(     &ma_init.command_attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(     &ma_init.command_attr_md.write_perm);
+    
+    uint8_t cs = 0;
+    
+    if( SaveToFLASH )   cs |= MA_FLAG_SAVE_TO_FLASH;
+    if( SampleSensors ) cs |= MA_FLAG_SAMPLE_SENSORS;
+    if( LiveStream )    cs |= MA_FLAG_LIVESTREAM;
+    
+    ma_init.current_status = cs;
+        
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(     &ma_init.status_attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&ma_init.status_attr_md.write_perm); //Phone does not need to write
 
+    //this is the key function which will fire up everything else
     err_code = ble_ma_init(&m_ma, &ma_init);
     APP_ERROR_CHECK(err_code);
 
@@ -550,12 +567,12 @@ static void ble_services_init(void)
 
     // Initialize Device Information Service.
     memset(&dis_init, 0, sizeof(dis_init));
-
+    
     ble_srv_ascii_to_utf8(&dis_init.manufact_name_str, (char *)MANUFACTURER_NAME);
-
+    
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&dis_init.dis_attr_md.read_perm);
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&dis_init.dis_attr_md.write_perm);
-
+    
     err_code = ble_dis_init(&dis_init);
     APP_ERROR_CHECK(err_code);
 }
@@ -653,6 +670,19 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
     }
 }
 
+void update_status_flags( void )
+{
+    uint8_t status = 0;
+    
+    if( SaveToFLASH )   status |= MA_FLAG_SAVE_TO_FLASH;
+    if( SampleSensors ) status |= MA_FLAG_SAMPLE_SENSORS;
+    if( LiveStream )    status |= MA_FLAG_LIVESTREAM;
+    
+    ble_ma_send_status(&m_ma, status);
+    
+    //ma_init.current_status = cs;
+}
+
 /**@brief Function for handling the Application's BLE Stack events.
  *
  * @param[in] p_ble_evt  Bluetooth stack event.
@@ -703,6 +733,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 
         case BLE_GATTS_EVT_WRITE:
             
+            //apparently, there is only one GATTS channel - how do we know which one?
             //this is for all data coming back from phone.....
             SEGGER_RTT_WriteString(0, "BLE_GATTS_EVT_WRITE\n");
             
@@ -717,31 +748,37 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             if(       new_command == 32 )
             {
                 SaveToFLASH = false;
+                update_status_flags();
                 SEGGER_RTT_WriteString(0, "Turning OFF save to FLASH\n");
             } 
             else if ( new_command == 33 )
             {
                 SaveToFLASH = true;
+                update_status_flags();
                 SEGGER_RTT_WriteString(0, "Turning ON save to FLASH\n");
             }
             else if ( new_command == 12 )
             {
                 SampleSensors = false;
+                update_status_flags();
                 SEGGER_RTT_WriteString(0, "Turning OFF sampling\n");
             }
             else if ( new_command == 13 )
             {
                 SampleSensors = true;
+                update_status_flags();
                 SEGGER_RTT_WriteString(0, "Turning ON sampling\n");
             }
             else if ( new_command == 34 )
             {
                 LiveStream = false;
+                update_status_flags();
                 SEGGER_RTT_WriteString(0, "Turning OFF livestream\n");
             }
             else if ( new_command == 35 )
             {
                 LiveStream = true;
+                update_status_flags();
                 SEGGER_RTT_WriteString(0, "Turning ON livestream\n");
             }
             else if ( new_command == 42 )
@@ -1279,6 +1316,7 @@ int main(void)
     SEGGER_RTT_WriteString(0, "\n\n***********\n");
     
     RTC1_timer_init();
+     
     leds_init();
     
     bool erase_bonds = true;
@@ -1293,7 +1331,7 @@ int main(void)
     gap_params_init();
     gatt_init();
     advertising_init();
-    ble_services_init();
+    ble_services_init();   
     conn_params_init();
     peer_manager_init();
     
@@ -1338,6 +1376,8 @@ int main(void)
     
     flash_red();
     
+    //static uint8_t lR[16];
+     
     /* The four basic functions are to:
      * (1) erase
      * (2) record
@@ -1370,24 +1410,36 @@ int main(void)
                 LiveStream    = false;
                 
                 //RTC1_timer_stop();
-                       
-                static uint8_t lR[16];
-    
-                //how much to flush
-                SEGGER_RTT_printf(0, "Glob: %d\r\n", GLOB_datastart);
                 
-                uint16_t lastLineWithData = GLOB_datastart;
-                                
-                for( uint16_t j = 0; j < lastLineWithData; j++) 
+                uint16_t lastLineWithData = GLOB_datastart * 16; /*16 lines per page; GLOB_datastart is in page units*/
+                
+                static uint8_t lR[16];
+                
+                for( uint16_t i = 0; i < lastLineWithData; i++) 
                 {  
                     nrf_delay_ms(100);
-                    FLASH_Line_Read(j, lR);
+                    
+                    FLASH_Line_Read(i, lR);
+                    
                     //pack in the page data
-                    lR[14] = (uint8_t) ( j       & 0xff);
-                    lR[15] = (uint8_t) ( j >> 8  & 0xff); 
+                    lR[14] = (uint8_t) ( i       & 0xff);
+                    lR[15] = (uint8_t) ( i >> 8  & 0xff); 
+                    
+                    //cannot send faster than the connection internal, which is 50 ms
                     ma_measurement_send_16( &m_ma, lR );
+                    
+                    /*
+                    SEGGER_RTT_WriteString(0, "Sent...\n");
+
+                    for(uint16_t j = 0; j < 16; j++) 
+                    { 
+                        SEGGER_RTT_printf(0, "%d ", lR[j]);
+                    };
+        
+                    SEGGER_RTT_WriteString(0, "\n");
+                    */
                 };
-                               
+    
                 //and go back to previous state....
                 SampleSensors = OldStateSampleSensors;
                 SaveToFLASH   = OldStateSaveToFLASH;
