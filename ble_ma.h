@@ -107,8 +107,9 @@ typedef struct
     uint8_t *                    p_board_state;                                        /**< If not NULL, initial value of the firmware state characteristic. */
     ble_srv_cccd_security_mode_t ma_attr_md;                                           /**< Initial security level for service measurement attribute */
     ble_srv_security_mode_t      command_attr_md;                                      /**< Initial security level for the command attribute */
-    ble_srv_security_mode_t      status_attr_md;                                       /**< Initial security level for the status attribute */
+    ble_srv_cccd_security_mode_t status_attr_md;                                       /**< Initial security level for the status attribute */
     uint8_t                      current_status;                                       /**< Current status of the board */
+    uint8_t                      current_statusN;                                       /**< Current status of the board */
 } ble_ma_init_t;
 
 /**@brief Mentaid Service structure. This contains various status information for the service. */
@@ -168,42 +169,11 @@ uint8_t  ma_encode(          ble_ma_t * p_ma, uint16_t hr, uint8_t b8, uint8_t p
         uint16_t l_white, int16_t ax, int16_t ay, int16_t az, uint16_t storage, uint8_t * p_encoded_buffer);
 
 uint32_t ma_measurement_send(ble_ma_t * p_ma, uint16_t hr, uint8_t b8, uint8_t p1, uint8_t t1, uint8_t h1, 
-        uint16_t l_white, int16_t ax, int16_t ay, int16_t az, uint16_t storage);
+                             uint16_t l_white, int16_t ax, int16_t ay, int16_t az, uint16_t storage);
 
 uint32_t ma_measurement_send_16(ble_ma_t * p_ma, uint8_t * data );
     
-/**@brief Function for setting the state of the Sensor Contact Supported bit.
- *
- * @param[in]   p_ma                         Mentaid Service structure.
- * @param[in]   is_sensor_contact_supported  New state of the Sensor Contact Supported bit.
- *
- * @return      NRF_SUCCESS on success, otherwise an error code.
- */
-uint32_t ble_ma_sensor_contact_supported_set(ble_ma_t * p_ma, bool is_sensor_contact_supported);
-
-/**@brief Function for setting the state of the Sensor Contact Detected bit.
- *
- * @param[in]   p_hrs                        Mentaid Service structure.
- * @param[in]   is_sensor_contact_detected   TRUE if sensor contact is detected, FALSE otherwise.
- */
-void ble_ma_sensor_contact_detected_update(ble_ma_t * p_ma, bool is_sensor_contact_detected);
-
-/**@brief Function for setting the Body Sensor Location.
- *
- * @details Sets a new value of the Body Sensor Location characteristic. The new value will be sent
- *          to the client the next time the client reads the Body Sensor Location characteristic.
- *
- * @param[in]   p_ma                  Mentaid Service structure.
- * @param[in]   body_sensor_location  New Body Sensor Location.
- *
- * @return      NRF_SUCCESS on success, otherwise an error code.
- */
-
-//this changes the value of the status characteristic
-uint32_t ble_ma_send_status(ble_ma_t * p_ma, uint8_t status);
-
-//uint32_t ble_ma_body_sensor_location_set(ble_ma_t * p_ma, uint8_t body_sensor_location);
-//uint32_t ble_ma_body_sensor_location_get(ble_ma_t * p_ma);
+uint32_t ma_status_send( ble_ma_t * p_ma, uint8_t status );
 
 
 #ifdef __cplusplus

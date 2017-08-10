@@ -461,6 +461,7 @@ static void gap_params_init(void)
     APP_ERROR_CHECK(err_code);
 
     err_code = sd_ble_gap_appearance_set(BLE_APPEARANCE_HEART_RATE_SENSOR_HEART_RATE_BELT);
+    
     APP_ERROR_CHECK(err_code);
 
     memset(&gap_conn_params, 0, sizeof(gap_conn_params));
@@ -473,7 +474,6 @@ static void gap_params_init(void)
     err_code = sd_ble_gap_ppcp_set(&gap_conn_params);
     APP_ERROR_CHECK(err_code);
 }
-
 
 /**@brief GATT module event handler.
  */
@@ -489,7 +489,6 @@ static void gatt_evt_handler(nrf_ble_gatt_t * p_gatt, nrf_ble_gatt_evt_t const *
     ble_ma_on_gatt_evt(&m_ma, p_evt);
 }
 
-
 /**@brief Function for initializing the GATT module.
  */
 static void gatt_init(void)
@@ -497,7 +496,6 @@ static void gatt_init(void)
     err_code = nrf_ble_gatt_init(&m_gatt, gatt_evt_handler);
     APP_ERROR_CHECK(err_code);
 }
-
 
 // Mentaid Measurement flag bits
 #define MA_FLAG_SAVE_TO_FLASH       (0x01 << 0)                           
@@ -514,25 +512,22 @@ static void ble_services_init(void)
     ble_bas_init_t  bas_init; //battery
     ble_dis_init_t  dis_init; //device information
     
-    //uint8_t body_sensor_location;
-
-    // Initialize Heart Rate Service.
-    //body_sensor_location = 1;//BLE_MA_BODY_SENSOR_LOCATION_WRIST;
-
     memset(&ma_init, 0, sizeof(ma_init));
-
     ma_init.evt_handler = NULL;
     
+    /*DATA TRANSMISSION*/
     // Here the sec level for the Mentaid Service can be changed/increased.
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(     &ma_init.ma_attr_md.cccd_write_perm);
     
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&ma_init.ma_attr_md.read_perm);
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&ma_init.ma_attr_md.write_perm);
     
-    // Command
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(     &ma_init.command_attr_md.read_perm);
+    /*COMMANDS FROM PHONE*/
+    //phone does not need to be able to read them - just write them
+    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&ma_init.command_attr_md.read_perm); 
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(     &ma_init.command_attr_md.write_perm);
     
+    /*STATUS REGISTER TO PHONE*/
     uint8_t cs = 0;
     
     if( SaveToFLASH )   cs |= MA_FLAG_SAVE_TO_FLASH;
@@ -541,10 +536,12 @@ static void ble_services_init(void)
     
     ma_init.current_status = cs;
         
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(     &ma_init.status_attr_md.read_perm);
-    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&ma_init.status_attr_md.write_perm); //Phone does not need to write
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(     &ma_init.status_attr_md.cccd_write_perm);    
+    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&ma_init.status_attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&ma_init.status_attr_md.write_perm);
 
     //this is the key function which will fire up everything else
+    //a lot of the details are handled here....
     err_code = ble_ma_init(&m_ma, &ma_init);
     APP_ERROR_CHECK(err_code);
 
@@ -561,18 +558,14 @@ static void ble_services_init(void)
     bas_init.support_notification = true;
     bas_init.p_report_ref         = NULL;
     bas_init.initial_batt_level   = 100;
-
     err_code = ble_bas_init(&m_bas, &bas_init);
     APP_ERROR_CHECK(err_code);
 
     // Initialize Device Information Service.
     memset(&dis_init, 0, sizeof(dis_init));
-    
     ble_srv_ascii_to_utf8(&dis_init.manufact_name_str, (char *)MANUFACTURER_NAME);
-    
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&dis_init.dis_attr_md.read_perm);
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&dis_init.dis_attr_md.write_perm);
-    
     err_code = ble_dis_init(&dis_init);
     APP_ERROR_CHECK(err_code);
 }
@@ -677,10 +670,9 @@ void update_status_flags( void )
     if( SaveToFLASH )   status |= MA_FLAG_SAVE_TO_FLASH;
     if( SampleSensors ) status |= MA_FLAG_SAMPLE_SENSORS;
     if( LiveStream )    status |= MA_FLAG_LIVESTREAM;
-    
-    ble_ma_send_status(&m_ma, status);
-    
-    //ma_init.current_status = cs;
+        
+    ma_status_send( &m_ma, status );
+   
 }
 
 /**@brief Function for handling the Application's BLE Stack events.
@@ -1211,6 +1203,8 @@ static void update_battery(void)
     battery_level8 = (uint8_t)(Current_VBATT() - 300);
     //SEGGER_RTT_printf(0, "Battery: %d\n", battery_level8);
     
+    update_status_flags();
+            
     //bluetooth update
     ret_code_t err_code = NRF_SUCCESS;  
     err_code = ble_bas_battery_level_update(&m_bas, battery_level_Percent);
@@ -1397,6 +1391,9 @@ int main(void)
     //controls visibility to bluetooth - not clear to me if advertizing interval is honored
     advertising_start(erase_bonds);
      
+    //send initial status packet
+    update_status_flags();
+    
     while( 1 ) 
     {
         if ( PleaseFlush ) {
