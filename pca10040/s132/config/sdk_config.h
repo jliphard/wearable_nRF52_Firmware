@@ -79,6 +79,7 @@
 #define SEGGER_BMA  0
 #define SEGGER_BME  0
 #define SEGGER_FDC  0
+#define SEGGER_ADC  1
 
 //#define NRF_LOG 1
 #define NRF_LOG_ENABLED 0

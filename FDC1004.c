@@ -28,9 +28,9 @@
  */
 
 /*
- * Datasheet - note that TI datasheet has key typo/error re. single/repeated measurement setup.
+ Datasheet - note that TI datasheet has key typo/error re. single/repeated measurement setup.
  http://www.ti.com/lit/ds/symlink/fdc1004.pdf
- */
+*/
 
 #include "FDC1004.h"
 

@@ -227,12 +227,13 @@ uint8_t * FLASH_Page_Read( uint16_t pageN )
 
 void FLASH_Line_Read( uint16_t lineN, uint8_t *line )
 {
-  
-  if ( lineN >  65535 ) { 
+  //this is now 4 larger
+  //used to be 65535  
+  if ( lineN >  262140 ) { 
       return;
   };
   
-  int address = (uint32_t)lineN * 16; //* 8; //16 * 8 bits per line
+  int address = (uint32_t)lineN * 16;
   
   tx4[0] = CMD_READ_DATA;
   tx4[1] = (address >> 16) & 0xFF;
@@ -242,23 +243,18 @@ void FLASH_Line_Read( uint16_t lineN, uint8_t *line )
   memset( rx20, 0, sizeof( rx20));
 
   nrf_drv_spi_transfer(&m_spi_master_1, tx4, sizeof(tx4), rx20, sizeof(rx20));
-  
-  //uint16_t i = 0;
-  
-  for(uint16_t i = 4; i < 20; i++) { 
-      line[i-4] = rx20[i]; 
-      //SEGGER_RTT_printf(0, "%d ", rx20[i]);
-  };
-  //SEGGER_RTT_WriteString(0, "\n");
+    
+  for(uint16_t i = 4; i < 20; i++) line[i-4] = rx20[i]; 
   
 }
 
 void FLASH_Page_WriteTest( uint16_t pageN )
 {
     
-  //memory has 0-4095 pages, and each page has length 256  
+  //old memory had 0-4095 pages, and each page has length 256  
+  //the new 4MB memory goes to 16384 
         
-  if ( pageN > 4095 ) { //memory has 4095 pages 
+  if ( pageN > 16384 ) { //memory has 16384 pages 
       //NRF_LOG_DEBUG("FLASH_Page_Write: Out of bounds!\r\n")
       return;
   };
@@ -314,7 +310,7 @@ void FLASH_Page_Write( uint16_t pageN, uint8_t *wp )
 {
     
   //memory has 0-4095 pages, and each page has length 256    
-  if ( pageN > 4095 ) {
+  if ( pageN > 16384 - 1 ) {
       //NRF_LOG_DEBUG("FLASH_Page_Write: Out of bounds!\r\n")
       return;
   };
@@ -349,16 +345,14 @@ void FLASH_Page_Write( uint16_t pageN, uint8_t *wp )
   uint16_t i = 0;
   
   //write the first 128 bytes
-  //NRF_LOG_DEBUG("Write first part\r\n")
   for( i = 4; i < (128+4); i++ ) { txHalf[i] = wp[i-4]; };
-  //NRF_LOG_HEXDUMP_DEBUG((uint8_t *)txHalf, 128+4);
   nrf_drv_spi_transfer(&m_spi_master_1, txHalf, sizeof(txHalf), NULL, 0);
  
   //wait for at most 200 ms to make sure write completes
   for( i = 0; i < 10; i++ ) {
       nrf_delay_ms(20); 
       if ( FLASH_Is_Busy() ) {
-          //NRF_LOG_DEBUG("Erase: FLASH is still busy\r\n");
+          //wait
       } else {
           break;   
       }
@@ -376,9 +370,7 @@ void FLASH_Page_Write( uint16_t pageN, uint8_t *wp )
   
   //write the next 128 bytes
   txHalf[3] = 128;
-  //NRF_LOG_DEBUG("Write second part\r\n")
   for( i = 4; i < (128+4); i++ ) { txHalf[i] = wp[i-4+128]; };
-  //NRF_LOG_HEXDUMP_DEBUG((uint8_t *)txHalf, 128+4);
   nrf_drv_spi_transfer(&m_spi_master_1, txHalf, sizeof(txHalf), NULL, 0);
   
 };
@@ -386,7 +378,7 @@ void FLASH_Page_Write( uint16_t pageN, uint8_t *wp )
 bool FLASH_Page_Is_Empty( uint16_t pageN )
 {
 
-  if ( pageN > 4095 ) { //memory has 4096 pages 
+  if ( pageN > 16384 - 1 ) { //memory has 16384 pages 
       //NRF_LOG_DEBUG("FLASH_PE: Out of bounds!\r\n")
       return false; //err on the side of safety
   };
@@ -424,7 +416,7 @@ uint16_t FLASH_Get_First_Available_Location( void )
    //this assumes that data were written contiguously
    uint16_t ds; 
         
-   for(ds = 0; ds < 4096; ds++)
+   for(ds = 0; ds < 16384; ds++)
    {
        //NRF_LOG_DEBUG("Testing page %d\r\n", ds);
        
@@ -440,7 +432,7 @@ uint16_t FLASH_Get_First_Available_Location( void )
    
    //should never really get here 
    //NRF_LOG_DEBUG("No memory available!\r\n", ds);
-   return 4096;
+   return 16384;
 }
 
 //=====================================

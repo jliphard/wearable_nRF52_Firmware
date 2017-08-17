@@ -115,8 +115,9 @@
 #include "BMA280.h"     //accelerometer
 #include "ADC.h"        //used for battery reading
 #include "SPIFlash.h"   //used for storage
-#include "VEML6040.h"    //light levels
-#include "FDC1004.h"    //light levels
+#include "VEML6040.h"   //light levels
+#include "FDC1004.h"    //Capacitence
+#include "AD5593R.h"    //ADC/DAC
 
 #include "SEGGER_RTT.h"
 
@@ -1269,9 +1270,10 @@ static void update_fast(void)
     //the different colors are largely useless - just get white
     
     //acceleration
-    BMA280_Get_Data(resultBMA);
+    BMA280_Get_Data( resultBMA );
     
-    FDC1004_Get_Data(resultFDC);
+    //capacitive sensing on 4 channels
+    FDC1004_Get_Data( resultFDC );
     
     /*
     float ax = (float)resultBMA[0];
@@ -1312,9 +1314,7 @@ static void update_fast(void)
                       resultVME[3],
                       resultBMA[0], resultBMA[1], resultBMA[2] );    
     }
-    
-
-    
+   
 }
 
 static void timeout_handler(void * p_context)
@@ -1333,6 +1333,7 @@ int main(void)
     leds_init();
     
     bool erase_bonds = true;
+    
     //buttons_leds_init(&erase_bonds);
     
     if( 1 == 2 ) {
@@ -1342,36 +1343,42 @@ int main(void)
     }
         
     gap_params_init();
+    
     gatt_init();
+    
     advertising_init();
+    
     ble_services_init();   
+    
     conn_params_init();
+    
     peer_manager_init();
     
     //ADC subsystem 
     ADC_init();
         
-    //I2C bus. 
+    //I2C bus 
     I2C_init();
     
-    //BME280 init. 
+    //BME280 init
     BME280_Turn_On();
-
     nrf_delay_ms(500);
     
+    //VEML6040 function is broken on board rev 2 - will be fixed for rev 3
     //VEML6040_Turn_On();
-    //nrf_delay_ms(500);
+    nrf_delay_ms(500);
     
     FDC1004_Turn_On();
+    nrf_delay_ms(500);
     
+    //AD5593R init
+    AD5593R_Turn_On();
     nrf_delay_ms(500);
     
     BMA280_Turn_On_Fast();
-    
     nrf_delay_ms(500);
     
-    BMA280_Calibrate();
-       
+    BMA280_Calibrate();  
     nrf_delay_ms(500);
     
     //save energy - do not need to sample that quickly
