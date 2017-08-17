@@ -12,6 +12,6 @@ _Goal 1_ - Baseline/robust datalogging
 *Sleep for most of the time (i.e. between the sampling events)
 *Do that until it drains the battery. 
 
-_Goal 2_ - Minimal BLE functionality. Upon system start, advertize BLE for 100 secs. If connect, then allow iOS BLE app to send commands, such as Erase Memory, or Upload all data. If not connect, just datalog as in use case 1. Once connection drops, begin to datalog.
+_Goal 2_ - Minimal BLE functionality. Upon system start, advertize BLE for 100 secs. If connect, then allow iOS BLE app to send commands, such as Erase Memory, or Upload all data. If not connect, just datalog as in use case 1. Once BLE connection drops, begin to datalog.
 
-_Goal 3_ - Get time/date/velocity from iPhone once in while to facilitate data analysis. Key for the GPS is velocitiy, since that helps us to understand if the wearer is cycling, driving, walking and so forth. Out of privacy concerns, we do not save or transmit GPS lat/lon location data.
+_Goal 3_ - Get time/date/velocity from iPhone once in while to facilitate data analysis. Key for the GPS is velocity, since that helps us to understand if the wearer is cycling, driving, walking and so forth. Out of privacy concerns, we do not save or transmit GPS lat/lon location data.
