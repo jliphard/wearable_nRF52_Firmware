@@ -1,0 +1,8 @@
+# Compiled Object files
+*.o
+*.d
+*.bin
+*.hex
+*.map
+*.out
+*.in
