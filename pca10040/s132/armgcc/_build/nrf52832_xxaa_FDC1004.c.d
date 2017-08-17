@@ -1,6 +1,6 @@
-_build/nrf52832_xxaa_VEML6040.c.o: \
- /Users/janliphardt/GH_wearable_Firmware//VEML6040.c \
- /Users/janliphardt/GH_wearable_Firmware//VEML6040.h \
+_build/nrf52832_xxaa_FDC1004.c.o: \
+ /Users/janliphardt/GH_wearable_Firmware//FDC1004.c \
+ /Users/janliphardt/GH_wearable_Firmware//FDC1004.h \
  /Users/janliphardt/GH_wearable_Firmware//I2C.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/twi_master/nrf_drv_twi.h \
  /ARM/nRF5_SDK_13//components/libraries/util/nordic_common.h \
@@ -56,10 +56,9 @@ _build/nrf52832_xxaa_VEML6040.c.o: \
  /ARM/nRF5_SDK_13//components/device/compiler_abstraction.h \
  /ARM/nRF5_SDK_13//components/libraries/util/app_util_platform.h \
  /ARM/nRF5_SDK_13//components/libraries/util/nrf_assert.h \
- /ARM/nRF5_SDK_13//components/libraries/util/app_error.h \
- /ARM/nRF5_SDK_13//components/drivers_nrf/delay/nrf_delay.h
+ /ARM/nRF5_SDK_13//components/libraries/util/app_error.h
 
-/Users/janliphardt/GH_wearable_Firmware//VEML6040.h:
+/Users/janliphardt/GH_wearable_Firmware//FDC1004.h:
 
 /Users/janliphardt/GH_wearable_Firmware//I2C.h:
 
@@ -172,5 +171,3 @@ _build/nrf52832_xxaa_VEML6040.c.o: \
 /ARM/nRF5_SDK_13//components/libraries/util/nrf_assert.h:
 
 /ARM/nRF5_SDK_13//components/libraries/util/app_error.h:
-
-/ARM/nRF5_SDK_13//components/drivers_nrf/delay/nrf_delay.h:

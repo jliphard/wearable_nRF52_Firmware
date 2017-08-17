@@ -116,6 +116,7 @@
 #include "ADC.h"        //used for battery reading
 #include "SPIFlash.h"   //used for storage
 #include "VEML6040.h"    //light levels
+#include "FDC1004.h"    //light levels
 
 #include "SEGGER_RTT.h"
 
@@ -181,6 +182,7 @@ static uint16_t heartbeat16 = 0;
 static int32_t  resultPTH[3]; //PTH from sensor 1
 static int16_t  resultVME[4];
 static int16_t  resultBMA[3];
+static float    resultFDC[4];
 
 static uint8_t  battery_level8        = 0;
 static uint8_t  battery_level_Percent = 0;
@@ -1263,11 +1265,13 @@ static void update_fast(void)
     BMP280H8 = (uint8_t)( (resultPTH[2]/1000.00)           );
     
     //light intensity
-    VEML6040_Get_Data(resultVME);
+    //VEML6040_Get_Data(resultVME);
     //the different colors are largely useless - just get white
     
     //acceleration
     BMA280_Get_Data(resultBMA);
+    
+    FDC1004_Get_Data(resultFDC);
     
     /*
     float ax = (float)resultBMA[0];
@@ -1355,7 +1359,10 @@ int main(void)
 
     nrf_delay_ms(500);
     
-    VEML6040_Turn_On();
+    //VEML6040_Turn_On();
+    //nrf_delay_ms(500);
+    
+    FDC1004_Turn_On();
     
     nrf_delay_ms(500);
     

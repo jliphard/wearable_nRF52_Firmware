@@ -1,6 +1,6 @@
 _build/nrf52832_xxaa_SPIFlash.c.o: \
- /Users/janliphardt/GH_MENTAID//SPIFlash.c \
- /Users/janliphardt/GH_MENTAID//SPIFlash.h \
+ /Users/janliphardt/GH_wearable_Firmware//SPIFlash.c \
+ /Users/janliphardt/GH_wearable_Firmware//SPIFlash.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/spi_master/nrf_drv_spi.h \
  /ARM/nRF5_SDK_13//components/libraries/util/nordic_common.h \
  ../config/sdk_config.h \
@@ -59,7 +59,7 @@ _build/nrf52832_xxaa_SPIFlash.c.o: \
  /ARM/nRF5_SDK_13//components/libraries/util/nrf_assert.h \
  /ARM/nRF5_SDK_13//components/libraries/util/app_error.h
 
-/Users/janliphardt/GH_MENTAID//SPIFlash.h:
+/Users/janliphardt/GH_wearable_Firmware//SPIFlash.h:
 
 /ARM/nRF5_SDK_13//components/drivers_nrf/spi_master/nrf_drv_spi.h:
 

@@ -1,4 +1,5 @@
-_build/nrf52832_xxaa_main.c.o: /Users/janliphardt/GH_MENTAID//main.c \
+_build/nrf52832_xxaa_main.c.o: \
+ /Users/janliphardt/GH_wearable_Firmware//main.c \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/lib/gcc/arm-none-eabi/6.3.1/include/stdint.h \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/stdint.h \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/machine/_default_types.h \
@@ -68,7 +69,7 @@ _build/nrf52832_xxaa_main.c.o: /Users/janliphardt/GH_MENTAID//main.c \
  /ARM/nRF5_SDK_13//components/ble/ble_advertising/ble_advertising.h \
  /ARM/nRF5_SDK_13//components/softdevice/s132/headers/ble_gattc.h \
  /ARM/nRF5_SDK_13//components/ble/ble_services/ble_bas/ble_bas.h \
- /Users/janliphardt/GH_MENTAID//ble_ma.h \
+ /Users/janliphardt/GH_wearable_Firmware//ble_ma.h \
  /ARM/nRF5_SDK_13//components/ble/nrf_ble_gatt/nrf_ble_gatt.h \
  /ARM/nRF5_SDK_13//components/libraries/util/sdk_errors.h \
  /ARM/nRF5_SDK_13//components/ble/ble_services/ble_dis/ble_dis.h \
@@ -119,22 +120,23 @@ _build/nrf52832_xxaa_main.c.o: /Users/janliphardt/GH_MENTAID//main.c \
  /ARM/nRF5_SDK_13//components/libraries/log/src/nrf_log_internal.h \
  /ARM/nRF5_SDK_13//components/libraries/log/nrf_log_ctrl.h \
  /ARM/nRF5_SDK_13//components/libraries/log/src/nrf_log_ctrl_internal.h \
- /Users/janliphardt/GH_MENTAID//I2C.h \
+ /Users/janliphardt/GH_wearable_Firmware//I2C.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/twi_master/nrf_drv_twi.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_twi.h \
  /ARM/nRF5_SDK_13//external/segger_rtt/SEGGER_RTT.h \
  /ARM/nRF5_SDK_13//external/segger_rtt/SEGGER_RTT_Conf.h \
- /Users/janliphardt/GH_MENTAID//BME280.h \
- /Users/janliphardt/GH_MENTAID//BMA280.h \
- /Users/janliphardt/GH_MENTAID//ADC.h \
+ /Users/janliphardt/GH_wearable_Firmware//BME280.h \
+ /Users/janliphardt/GH_wearable_Firmware//BMA280.h \
+ /Users/janliphardt/GH_wearable_Firmware//ADC.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/saadc/nrf_drv_saadc.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_saadc.h \
- /Users/janliphardt/GH_MENTAID//SPIFlash.h \
+ /Users/janliphardt/GH_wearable_Firmware//SPIFlash.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/spi_master/nrf_drv_spi.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_peripherals.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_spi.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_spim.h \
- /Users/janliphardt/GH_MENTAID//VEML6040.h
+ /Users/janliphardt/GH_wearable_Firmware//VEML6040.h \
+ /Users/janliphardt/GH_wearable_Firmware//FDC1004.h
 
 /ARM/gcc-arm-none-eabi-6-2017-q1-update/lib/gcc/arm-none-eabi/6.3.1/include/stdint.h:
 
@@ -274,7 +276,7 @@ _build/nrf52832_xxaa_main.c.o: /Users/janliphardt/GH_MENTAID//main.c \
 
 /ARM/nRF5_SDK_13//components/ble/ble_services/ble_bas/ble_bas.h:
 
-/Users/janliphardt/GH_MENTAID//ble_ma.h:
+/Users/janliphardt/GH_wearable_Firmware//ble_ma.h:
 
 /ARM/nRF5_SDK_13//components/ble/nrf_ble_gatt/nrf_ble_gatt.h:
 
@@ -376,7 +378,7 @@ _build/nrf52832_xxaa_main.c.o: /Users/janliphardt/GH_MENTAID//main.c \
 
 /ARM/nRF5_SDK_13//components/libraries/log/src/nrf_log_ctrl_internal.h:
 
-/Users/janliphardt/GH_MENTAID//I2C.h:
+/Users/janliphardt/GH_wearable_Firmware//I2C.h:
 
 /ARM/nRF5_SDK_13//components/drivers_nrf/twi_master/nrf_drv_twi.h:
 
@@ -386,17 +388,17 @@ _build/nrf52832_xxaa_main.c.o: /Users/janliphardt/GH_MENTAID//main.c \
 
 /ARM/nRF5_SDK_13//external/segger_rtt/SEGGER_RTT_Conf.h:
 
-/Users/janliphardt/GH_MENTAID//BME280.h:
+/Users/janliphardt/GH_wearable_Firmware//BME280.h:
 
-/Users/janliphardt/GH_MENTAID//BMA280.h:
+/Users/janliphardt/GH_wearable_Firmware//BMA280.h:
 
-/Users/janliphardt/GH_MENTAID//ADC.h:
+/Users/janliphardt/GH_wearable_Firmware//ADC.h:
 
 /ARM/nRF5_SDK_13//components/drivers_nrf/saadc/nrf_drv_saadc.h:
 
 /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_saadc.h:
 
-/Users/janliphardt/GH_MENTAID//SPIFlash.h:
+/Users/janliphardt/GH_wearable_Firmware//SPIFlash.h:
 
 /ARM/nRF5_SDK_13//components/drivers_nrf/spi_master/nrf_drv_spi.h:
 
@@ -406,4 +408,6 @@ _build/nrf52832_xxaa_main.c.o: /Users/janliphardt/GH_MENTAID//main.c \
 
 /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_spim.h:
 
-/Users/janliphardt/GH_MENTAID//VEML6040.h:
+/Users/janliphardt/GH_wearable_Firmware//VEML6040.h:
+
+/Users/janliphardt/GH_wearable_Firmware//FDC1004.h:

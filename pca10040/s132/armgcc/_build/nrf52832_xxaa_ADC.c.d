@@ -1,5 +1,6 @@
-_build/nrf52832_xxaa_ADC.c.o: /Users/janliphardt/GH_MENTAID//ADC.c \
- /Users/janliphardt/GH_MENTAID//ADC.h \
+_build/nrf52832_xxaa_ADC.c.o: \
+ /Users/janliphardt/GH_wearable_Firmware//ADC.c \
+ /Users/janliphardt/GH_wearable_Firmware//ADC.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/saadc/nrf_drv_saadc.h \
  ../config/sdk_config.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/hal/nrf_saadc.h \
@@ -56,7 +57,7 @@ _build/nrf52832_xxaa_ADC.c.o: /Users/janliphardt/GH_MENTAID//ADC.c \
  /ARM/nRF5_SDK_13//components/libraries/util/app_util.h \
  /ARM/nRF5_SDK_13//components/libraries/util/sdk_macros.h
 
-/Users/janliphardt/GH_MENTAID//ADC.h:
+/Users/janliphardt/GH_wearable_Firmware//ADC.h:
 
 /ARM/nRF5_SDK_13//components/drivers_nrf/saadc/nrf_drv_saadc.h:
 

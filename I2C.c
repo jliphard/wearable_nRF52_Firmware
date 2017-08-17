@@ -61,7 +61,7 @@ void writeBytes(uint8_t address, uint8_t * data, uint8_t n_bytes)
     m_xfer_done = false;
     err_code = nrf_drv_twi_tx(&i2c, address, data, n_bytes, false); //false = close the channel - not waiting for response 
     APP_ERROR_CHECK(err_code);
-    while (m_xfer_done == false); //wait until end of transfer
+    while (m_xfer_done == false); //wait until end of transfer -- seriously??
 }
  
 uint8_t readByte(uint8_t address, uint8_t subAddress)
@@ -149,3 +149,4 @@ void readBytes(uint8_t address, uint8_t subAddress, uint8_t * dest, uint8_t n_by
     //NRF_LOG_DEBUG("readBytes done\r\n");
     //NRF_LOG_FLUSH();
 }
+

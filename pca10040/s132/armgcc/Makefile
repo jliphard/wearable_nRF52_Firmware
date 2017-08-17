@@ -3,7 +3,7 @@ TARGETS          := nrf52832_xxaa
 OUTPUT_DIRECTORY := _build
 
 SDK_ROOT := /ARM/nRF5_SDK_13/
-PROJ_DIR := /Users/janliphardt/GH_MENTAID/
+PROJ_DIR := /Users/janliphardt/GH_wearable_Firmware/
 
 $(OUTPUT_DIRECTORY)/nrf52832_xxaa.out: LINKER_SCRIPT  := mentaid.ld
 # 
@@ -17,6 +17,7 @@ SRC_FILES += \
   $(PROJ_DIR)/SPIFlash.c \
   $(PROJ_DIR)/VEML6040.c \
   $(PROJ_DIR)/BMA280.c \
+  $(PROJ_DIR)/FDC1004.c \
   $(PROJ_DIR)/ble_ma.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_serial.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_frontend.c \
@@ -261,7 +262,6 @@ LDFLAGS += -Wl,--gc-sections
 # use newlib in nano version
 LDFLAGS += --specs=nano.specs -lc -lnosys
 
-
 .PHONY: $(TARGETS) default all clean help flash flash_softdevice
 
 # Default target - first one defined
@@ -270,7 +270,7 @@ default: nrf52832_xxaa
 # Print all targets that can be built
 help:
 	@echo following targets are available:
-	@echo 	nrf52832_xxaa
+	@echo nrf52832_xxaa
 
 TEMPLATE_PATH := $(SDK_ROOT)/components/toolchain/gcc
 

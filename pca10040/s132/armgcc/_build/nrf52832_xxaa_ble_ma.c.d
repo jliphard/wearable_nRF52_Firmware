@@ -1,4 +1,5 @@
-_build/nrf52832_xxaa_ble_ma.c.o: /Users/janliphardt/GH_MENTAID//ble_ma.c \
+_build/nrf52832_xxaa_ble_ma.c.o: \
+ /Users/janliphardt/GH_wearable_Firmware//ble_ma.c \
  /ARM/nRF5_SDK_13//components/libraries/util/sdk_common.h \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/lib/gcc/arm-none-eabi/6.3.1/include/stdint.h \
  /ARM/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/stdint.h \
@@ -41,7 +42,7 @@ _build/nrf52832_xxaa_ble_ma.c.o: /Users/janliphardt/GH_MENTAID//ble_ma.c \
  /ARM/nRF5_SDK_13//components/device/nrf52_name_change.h \
  /ARM/nRF5_SDK_13//components/device/compiler_abstraction.h \
  /ARM/nRF5_SDK_13//components/libraries/util/sdk_macros.h \
- /Users/janliphardt/GH_MENTAID//ble_ma.h \
+ /Users/janliphardt/GH_wearable_Firmware//ble_ma.h \
  /ARM/nRF5_SDK_13//components/softdevice/s132/headers/ble.h \
  /ARM/nRF5_SDK_13//components/softdevice/s132/headers/ble_ranges.h \
  /ARM/nRF5_SDK_13//components/softdevice/s132/headers/ble_types.h \
@@ -146,7 +147,7 @@ _build/nrf52832_xxaa_ble_ma.c.o: /Users/janliphardt/GH_MENTAID//ble_ma.c \
 
 /ARM/nRF5_SDK_13//components/libraries/util/sdk_macros.h:
 
-/Users/janliphardt/GH_MENTAID//ble_ma.h:
+/Users/janliphardt/GH_wearable_Firmware//ble_ma.h:
 
 /ARM/nRF5_SDK_13//components/softdevice/s132/headers/ble.h:
 

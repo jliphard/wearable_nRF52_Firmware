@@ -1,6 +1,7 @@
-_build/nrf52832_xxaa_BMA280.c.o: /Users/janliphardt/GH_MENTAID//BMA280.c \
- /Users/janliphardt/GH_MENTAID//BMA280.h \
- /Users/janliphardt/GH_MENTAID//I2C.h \
+_build/nrf52832_xxaa_BMA280.c.o: \
+ /Users/janliphardt/GH_wearable_Firmware//BMA280.c \
+ /Users/janliphardt/GH_wearable_Firmware//BMA280.h \
+ /Users/janliphardt/GH_wearable_Firmware//I2C.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/twi_master/nrf_drv_twi.h \
  /ARM/nRF5_SDK_13//components/libraries/util/nordic_common.h \
  ../config/sdk_config.h \
@@ -58,9 +59,9 @@ _build/nrf52832_xxaa_BMA280.c.o: /Users/janliphardt/GH_MENTAID//BMA280.c \
  /ARM/nRF5_SDK_13//components/libraries/util/app_error.h \
  /ARM/nRF5_SDK_13//components/drivers_nrf/delay/nrf_delay.h
 
-/Users/janliphardt/GH_MENTAID//BMA280.h:
+/Users/janliphardt/GH_wearable_Firmware//BMA280.h:
 
-/Users/janliphardt/GH_MENTAID//I2C.h:
+/Users/janliphardt/GH_wearable_Firmware//I2C.h:
 
 /ARM/nRF5_SDK_13//components/drivers_nrf/twi_master/nrf_drv_twi.h:
 
