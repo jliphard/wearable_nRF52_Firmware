@@ -27,6 +27,11 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Datasheet - note that TI datasheet has key typo/error re. single/repeated measurement setup.
+ http://www.ti.com/lit/ds/symlink/fdc1004.pdf
+ */
+
 #include "FDC1004.h"
 
 #define FDC1004_ADDRESS  0x50
