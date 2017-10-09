@@ -159,6 +159,10 @@
 //#define PERIPHERAL_RESOURCE_SHARING_ENABLED 1
 //#define PPI_ENABLED 1
 
+//support for the mic
+#define I2S_SDIN_PIN  16
+#define I2S_SDOUT_PIN 27
+
 //==========================================================
 // <o> NRF_BLE_CENTRAL_LINK_COUNT - Number of central links 
 #ifndef NRF_BLE_CENTRAL_LINK_COUNT
@@ -755,7 +759,7 @@
 #if  GPIOTE_ENABLED
 // <o> GPIOTE_CONFIG_NUM_OF_LOW_POWER_EVENTS - Number of lower power input pins 
 #ifndef GPIOTE_CONFIG_NUM_OF_LOW_POWER_EVENTS
-#define GPIOTE_CONFIG_NUM_OF_LOW_POWER_EVENTS 4
+#define GPIOTE_CONFIG_NUM_OF_LOW_POWER_EVENTS 1 //used to be 4?
 #endif
 
 // <o> GPIOTE_CONFIG_IRQ_PRIORITY  - Interrupt priority
@@ -834,21 +838,21 @@
 // <e> I2S_ENABLED - nrf_drv_i2s - I2S peripheral driver
 //==========================================================
 #ifndef I2S_ENABLED
-#define I2S_ENABLED 0
+#define I2S_ENABLED 1
 #endif
 #if  I2S_ENABLED
 // <o> I2S_CONFIG_SCK_PIN - SCK pin  <0-31> 
 
 
 #ifndef I2S_CONFIG_SCK_PIN
-#define I2S_CONFIG_SCK_PIN 31
+#define I2S_CONFIG_SCK_PIN 15//31
 #endif
 
 // <o> I2S_CONFIG_LRCK_PIN - LRCK pin  <1-31> 
 
 
 #ifndef I2S_CONFIG_LRCK_PIN
-#define I2S_CONFIG_LRCK_PIN 30
+#define I2S_CONFIG_LRCK_PIN 18//30
 #endif
 
 // <o> I2S_CONFIG_MCK_PIN - MCK pin 
@@ -1383,7 +1387,7 @@
 // <e> PPI_ENABLED - nrf_drv_ppi - PPI peripheral driver
 //==========================================================
 #ifndef PPI_ENABLED
-#define PPI_ENABLED 0
+#define PPI_ENABLED 1
 #endif
 #if  PPI_ENABLED
 // <e> PPI_CONFIG_LOG_ENABLED - Enables logging in the module.
@@ -2464,7 +2468,7 @@
 // <e> TIMER_ENABLED - nrf_drv_timer - TIMER periperal driver
 //==========================================================
 #ifndef TIMER_ENABLED
-#define TIMER_ENABLED 0
+#define TIMER_ENABLED 1
 #endif
 #if  TIMER_ENABLED
 // <o> TIMER_DEFAULT_CONFIG_FREQUENCY  - Timer frequency if in Timer mode
@@ -2525,14 +2529,14 @@
  
 
 #ifndef TIMER0_ENABLED
-#define TIMER0_ENABLED 0
+#define TIMER0_ENABLED 1
 #endif
 
 // <q> TIMER1_ENABLED  - Enable TIMER1 instance
  
 
 #ifndef TIMER1_ENABLED
-#define TIMER1_ENABLED 0
+#define TIMER1_ENABLED 1
 #endif
 
 // <q> TIMER2_ENABLED  - Enable TIMER2 instance
@@ -2611,6 +2615,26 @@
 
 #endif //TIMER_ENABLED
 // </e>
+
+//==========================================================
+// <q> APP_FIFO_ENABLED  - app_fifo - Software FIFO implementation
+ 
+
+#ifndef APP_FIFO_ENABLED
+#define APP_FIFO_ENABLED 1
+#endif
+
+// <q> RETARGET_ENABLED  - retarget - Retargeting stdio functions
+ 
+#ifndef RETARGET_ENABLED
+#define RETARGET_ENABLED 1
+#endif
+
+// <q> APP_PWM_ENABLED  - app_pwm - PWM functionality
+ 
+#ifndef APP_PWM_ENABLED
+#define APP_PWM_ENABLED 1
+#endif
 
 // <e> TWIS_ENABLED - nrf_drv_twis - TWIS peripheral driver
 //==========================================================

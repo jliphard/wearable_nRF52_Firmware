@@ -10,14 +10,13 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/Users/janliphardt/GH_MENTAID/BMA280.c</file>
-            <file>file:/Users/janliphardt/GH_MENTAID/ble_ma.h</file>
-            <file>file:/Users/janliphardt/GH_MENTAID/VEML6040.h</file>
-            <file>file:/Users/janliphardt/GH_MENTAID/ble_ma.c</file>
-            <file>file:/Users/janliphardt/GH_MENTAID/SPIFlash.c</file>
-            <file>file:/Users/janliphardt/GH_MENTAID/pca10040/s132/armgcc/Makefile</file>
-            <file>file:/Users/janliphardt/GH_MENTAID/main.c</file>
-            <file>file:/Users/janliphardt/GH_MENTAID/BMA280.h</file>
+            <file>file:/Users/janliphardt/GH_wearable_Firmware/BME280.c</file>
+            <file>file:/Users/janliphardt/GH_wearable_Firmware/app_pwm.c</file>
+            <file>file:/Users/janliphardt/GH_wearable_Firmware/pca10040/s132/armgcc/Makefile</file>
+            <file>file:/Users/janliphardt/GH_wearable_Firmware/app_pwm.h</file>
+            <file>file:/Users/janliphardt/GH_wearable_Firmware/main.c</file>
+            <file>file:/Users/janliphardt/GH_wearable_Firmware/pca10040/s132/config/sdk_config.h</file>
+            <file>file:/Users/janliphardt/GH_wearable_Firmware/I2C.c</file>
         </group>
     </open-files>
     <preferences xmlns="http://www.netbeans.org/ns/auxiliary-configuration-preferences/1">

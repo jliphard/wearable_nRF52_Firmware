@@ -13,18 +13,24 @@
           </df>
         </df>
       </df>
+      <in>AD5593R.c</in>
+      <in>AD5593R.h</in>
       <in>ADC.c</in>
       <in>ADC.h</in>
       <in>BMA280.c</in>
       <in>BMA280.h</in>
       <in>BME280.c</in>
       <in>BME280.h</in>
+      <in>FDC1004.c</in>
+      <in>FDC1004.h</in>
       <in>I2C.c</in>
       <in>I2C.h</in>
       <in>SPIFlash.c</in>
       <in>SPIFlash.h</in>
       <in>VEML6040.c</in>
       <in>VEML6040.h</in>
+      <in>app_pwm.c</in>
+      <in>app_pwm.h</in>
       <in>ble_ma.c</in>
       <in>ble_ma.h</in>
       <in>main.c</in>

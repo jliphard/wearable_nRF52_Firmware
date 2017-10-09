@@ -19,6 +19,7 @@ SRC_FILES += \
   $(PROJ_DIR)/BMA280.c \
   $(PROJ_DIR)/FDC1004.c \
   $(PROJ_DIR)/AD5593R.c \
+  $(PROJ_DIR)/app_pwm.c \
   $(PROJ_DIR)/ble_ma.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_serial.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_frontend.c \
@@ -51,6 +52,7 @@ SRC_FILES += \
   $(SDK_ROOT)/components/drivers_nrf/hal/nrf_saadc.c \
   $(SDK_ROOT)/components/drivers_nrf/ppi/nrf_drv_ppi.c \
   $(SDK_ROOT)/components/drivers_nrf/timer/nrf_drv_timer.c \
+  $(SDK_ROOT)/components/drivers_nrf/i2s/nrf_drv_i2s.c \
   $(SDK_ROOT)/components/ble/ble_advertising/ble_advertising.c \
   $(SDK_ROOT)/components/ble/common/ble_advdata.c \
   $(SDK_ROOT)/components/ble/common/ble_conn_params.c \
