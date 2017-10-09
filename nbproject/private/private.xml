@@ -12,9 +12,13 @@
         <group>
             <file>file:/Users/janliphardt/GH_wearable_Firmware/BME280.c</file>
             <file>file:/Users/janliphardt/GH_wearable_Firmware/app_pwm.c</file>
+            <file>file:/Users/janliphardt/GH_wearable_Firmware/ADC.h</file>
             <file>file:/Users/janliphardt/GH_wearable_Firmware/pca10040/s132/armgcc/Makefile</file>
+            <file>file:/Users/janliphardt/GH_wearable_Firmware/ADC.c</file>
+            <file>file:/Users/janliphardt/GH_wearable_Firmware/BMA280.c</file>
             <file>file:/Users/janliphardt/GH_wearable_Firmware/app_pwm.h</file>
             <file>file:/Users/janliphardt/GH_wearable_Firmware/main.c</file>
+            <file>file:/Users/janliphardt/GH_wearable_Firmware/AD5593R.h</file>
             <file>file:/Users/janliphardt/GH_wearable_Firmware/pca10040/s132/config/sdk_config.h</file>
             <file>file:/Users/janliphardt/GH_wearable_Firmware/I2C.c</file>
         </group>

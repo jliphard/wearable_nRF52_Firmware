@@ -152,33 +152,35 @@ void pwm_ready_callback(uint32_t pwm_id)                                        
 
 static bool copy_samples(uint32_t const * p_buffer, uint16_t number_of_words)                              // I2S data callback read and ring buffer write function
 {
-	uint32_t count, size, offset = 0;
+    uint32_t count, size, offset = 0;
+
+    //SEGGER_RTT_WriteString(0, "copy_samples(uint32_t)\n");
+    
+    memcpy(lsample_buffer_rx, p_buffer, (4*number_of_words));                                              // Copy I2S data from the callback buffer to a volitile buffer
 	
-	memcpy(lsample_buffer_rx, p_buffer, (4*number_of_words));                                              // Copy I2S data from the callback buffer to a volitile buffer
-	
-	// Parse I2S callback data and load into a byte array
-	for(uint32_t i=0; i<number_of_words; i++)
-	{
-	  u.word = lsample_buffer_rx[i];
-	  for(uint8_t j=0; j<4; j++)
-	  {
-	    lsample_byte_buffer_rx[((4*i) + j)] = u.byte_decomp[3-j];
-	  }
-	}
-	
-	// Load I2S byte array into the ring buffer and index write pointer
-	count = (4*number_of_words);
-	size = count;
-	if((i2s_write + count) > RINGBUFFER_SIZE)                                                              // IF I2S byte count is larger than the space before pointer wrap, break into two pieces
-    {
+    // Parse I2S callback data and load into a byte array
+    for(uint32_t i=0; i<number_of_words; i++) {
+        u.word = lsample_buffer_rx[i];
+        for(uint8_t j=0; j<4; j++) {
+            lsample_byte_buffer_rx[((4*i) + j)] = u.byte_decomp[3-j];
+        }
+    }
+    
+    SEGGER_RTT_printf(0, "%d %d %d %d\r\n", lsample_byte_buffer_rx[0], lsample_byte_buffer_rx[1], lsample_byte_buffer_rx[2] ,lsample_byte_buffer_rx[3]);
+    
+    // Load I2S byte array into the ring buffer and index write pointer
+    count = (4*number_of_words);
+    
+    size = count;
+    
+    if((i2s_write + count) > RINGBUFFER_SIZE) {  // IF I2S byte count is larger than the space before pointer wrap, break into two pieces
       count = RINGBUFFER_SIZE - i2s_write;
     }
-    if(count)
-	{
-	  for(uint32_t i=0; i<count; i++)
-	  {
-	    ringbuffer[i2s_write + i] = lsample_byte_buffer_rx[i];
-	  }
+    
+    if(count) {
+        for(uint32_t i=0; i<count; i++) {
+            ringbuffer[i2s_write + i] = lsample_byte_buffer_rx[i];
+	}
 	  i2s_write += count;
       size -= count;
 	  offset = count;
@@ -188,17 +190,19 @@ static bool copy_samples(uint32_t const * p_buffer, uint16_t number_of_words)   
       }
     }
     count = size;
-    if(count)                                                                                              // If broken into two parts, do the second part
-	{
-	  for(uint32_t i=0; i<count; i++)
-	  {
-	     ringbuffer[i2s_write + i] = lsample_byte_buffer_rx[offset + i];
-	  }
-	  i2s_write += count;
-      if(i2s_write == RINGBUFFER_SIZE)
-      {
-        i2s_write = 0;
-      }
+    
+    if(count) {                                                                                             // If broken into two parts, do the second part {
+        for(uint32_t i=0; i<count; i++)
+        {
+            ringbuffer[i2s_write + i] = lsample_byte_buffer_rx[offset + i];
+        }
+        
+        i2s_write += count;
+        
+        if(i2s_write == RINGBUFFER_SIZE)
+        {
+            i2s_write = 0;
+        }
     }
 	  
     return true;
@@ -241,8 +245,8 @@ void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
     while (1);
 }
 
-APP_PWM_INSTANCE(PWM1,0);                                                                                  // Create the instance "PWM1" using TIMER0.
-APP_PWM_INSTANCE(PWM2,1);                                                                                  // Create the instance "PWM2" using TIMER1.
+APP_PWM_INSTANCE(PWM1,1);                                                                                  // Create the instance "PWM1" using TIMER1.
+APP_PWM_INSTANCE(PWM2,2);                                                                                  // Create the instance "PWM2" using TIMER2.
 
 #define BLE_UUID_MENTAID_SERVICE           0x180D 
 //#define BLE_UUID_MENTAID_MEASUREMENT_CHAR  0x2A37
@@ -1565,15 +1569,16 @@ int main(void)
 
     // Initialize and enable PWM's
     
-    //err_code = app_pwm_ticks_init(&PWM1,&pwm1_cfg,pwm_ready_callback);
-    //APP_ERROR_CHECK(err_code);
+    err_code = app_pwm_ticks_init(&PWM1,&pwm1_cfg,pwm_ready_callback);
+    APP_ERROR_CHECK(err_code);
     
     err_code = app_pwm_ticks_init(&PWM2,&pwm2_cfg,pwm_ready_callback);
     APP_ERROR_CHECK(err_code);
     
-    //app_pwm_enable(&PWM1);
+    app_pwm_enable(&PWM1);
     app_pwm_enable(&PWM2);
-    //app_pwm_channel_duty_set(&PWM1, 0, 50);                                                                // Set at 50% duty cycle for square wave
+    
+    app_pwm_channel_duty_set(&PWM1, 0, 50);                                                                // Set at 50% duty cycle for square wave
     app_pwm_channel_duty_set(&PWM2, 0, 50);
     
     // Instantiate I2S
@@ -1583,9 +1588,50 @@ int main(void)
     
     memset(m_buffer_rx, 0xCC, sizeof(m_buffer_rx));                                                        // Initialize I2S data callback buffer
     
-    
+    uint32_t count = 0;
+    uint32_t size = 0;
+        
     while( 1 ) 
     {
+      // microphone
+      // Push data from the ring buffer to the UART
+      /*
+      while(i2s_read != i2s_write)
+      {
+        if(i2s_write > i2s_read)
+        {
+          count = i2s_write - i2s_read;                                                                    // Data to be read but not wrapped around the end of the ring buffer
+        }
+        else
+        {
+          count = RINGBUFFER_SIZE - i2s_read;                                                              // Data to be read but and wrapped around the end of the ring buffer
+        }
+        
+        if((i2s_read + count) >= RINGBUFFER_SIZE)
+        {
+          count = RINGBUFFER_SIZE - i2s_read;                                                              // There is enough data so that emptying it out requires wrapping around the end of the ring buffer
+        }
+        
+        if(count > 128) count = 128;                                                                       // The "Chunk" size should be <= 128bytes to not overwhelm the UART Tx buffer
+	
+        for(uint32_t i=0; i<count; i++)
+	{
+            while(app_uart_put(ringbuffer[i2s_read + i]) != NRF_SUCCESS);                                    // Load byte-by-byte into UART Tx buffer
+		  size = i+1;
+            }
+	i2s_read += size;
+        
+        if(i2s_read == RINGBUFFER_SIZE)
+        {
+          i2s_read = 0;
+        }
+        
+        if (size != count)
+        {
+          break;
+        }
+      } //while
+      */
         //upload all stored data to phone, for plotting/cloud upload
         if ( PleaseFlush ) {
             

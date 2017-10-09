@@ -93,10 +93,9 @@
 #define TWI0_ENABLED        1
 #define TWI0_USE_EASY_DMA   0
 
-#define TIMER_ENABLED     1
-#define TIMER0_ENABLED    1
-
-#define APP_TIMER_ENABLED 1
+//#define TIMER_ENABLED     1 redundant
+//#define TIMER0_ENABLED    1 redundant
+//#define APP_TIMER_ENABLED 1 redundant
 
 /*
 0 - Off
@@ -2543,7 +2542,7 @@
  
 
 #ifndef TIMER2_ENABLED
-#define TIMER2_ENABLED 0
+#define TIMER2_ENABLED 1
 #endif
 
 // <q> TIMER3_ENABLED  - Enable TIMER3 instance
