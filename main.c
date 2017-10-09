@@ -126,37 +126,37 @@
 #include "SEGGER_RTT.h"
 
 
-#define I2S_BUFFER_SIZE     64                                                                             // Data handler is called when I2S data bufffer contains (I2S_BUFFER_SIZE/2) 32bit words
-#define UART_TX_BUF_SIZE    256                                                                            // UART TX FIFO buffer size in bytes
-#define UART_RX_BUF_SIZE    256                                                                            // UART RX FIFO buffer size in bytes
-#define RINGBUFFER_SIZE     8192                                                                           // Size in bytes of ringbuffer between I2S and UART
+#define I2S_BUFFER_SIZE     64          // Data handler is called when I2S data bufffer contains (I2S_BUFFER_SIZE/2) 32bit words
+//#define UART_TX_BUF_SIZE    256         // UART TX FIFO buffer size in bytes
+//#define UART_RX_BUF_SIZE    256         // UART RX FIFO buffer size in bytes
+#define RINGBUFFER_SIZE     8192        // Size in bytes of ringbuffer between I2S and UART
 
 static uint32_t          m_buffer_rx[I2S_BUFFER_SIZE];
 static uint32_t          lsample_buffer_rx[(I2S_BUFFER_SIZE/2)];
 static volatile uint8_t  lsample_byte_buffer_rx[(I2S_BUFFER_SIZE*2)];
 static volatile uint8_t  ringbuffer[RINGBUFFER_SIZE];
-static volatile uint32_t i2s_write = 0;                                                                    // Ring buffer write pointer
-static volatile uint32_t i2s_read  = 0;                                                                    // Ring buffer read pointer
-static bool              m_error_encountered;                                                              // I2S data callback error status
-static volatile bool     ready_flag;                                                                       // A PWM ready status
+static volatile uint32_t i2s_write = 0;             // Ring buffer write pointer
+static volatile uint32_t i2s_read  = 0;             // Ring buffer read pointer
+static bool              m_error_encountered;       // I2S data callback error status
+static volatile bool     ready_flag;                // A PWM ready status
 union
 {
   uint32_t word;
   uint8_t  byte_decomp[4];
 }u;
 
-void pwm_ready_callback(uint32_t pwm_id)                                                                   // PWM ready callback function
+void pwm_ready_callback(uint32_t pwm_id) // PWM ready callback function
 {
 	ready_flag = true;
 }
 
-static bool copy_samples(uint32_t const * p_buffer, uint16_t number_of_words)                              // I2S data callback read and ring buffer write function
+static bool copy_samples(uint32_t const * p_buffer, uint16_t number_of_words) // I2S data callback read and ring buffer write function
 {
     uint32_t count, size, offset = 0;
 
     //SEGGER_RTT_WriteString(0, "copy_samples(uint32_t)\n");
     
-    memcpy(lsample_buffer_rx, p_buffer, (4*number_of_words));                                              // Copy I2S data from the callback buffer to a volitile buffer
+    memcpy(lsample_buffer_rx, p_buffer, (4*number_of_words)); // Copy I2S data from the callback buffer to a volatile buffer
 	
     // Parse I2S callback data and load into a byte array
     for(uint32_t i=0; i<number_of_words; i++) {
@@ -181,26 +181,25 @@ static bool copy_samples(uint32_t const * p_buffer, uint16_t number_of_words)   
         for(uint32_t i=0; i<count; i++) {
             ringbuffer[i2s_write + i] = lsample_byte_buffer_rx[i];
 	}
-	  i2s_write += count;
-      size -= count;
-	  offset = count;
-      if(i2s_write == RINGBUFFER_SIZE)                                                                     // Wrap the write pointer
-      {
-        i2s_write = 0;
-      }
+        i2s_write += count;
+        size -= count;
+	offset = count;
+        if(i2s_write == RINGBUFFER_SIZE) {  // Wrap the write pointer
+            i2s_write = 0;
+        }
     }
+    
     count = size;
     
-    if(count) {                                                                                             // If broken into two parts, do the second part {
-        for(uint32_t i=0; i<count; i++)
-        {
+    if(count) { // If broken into two parts, do the second part 
+        
+        for(uint32_t i=0; i<count; i++) {
             ringbuffer[i2s_write + i] = lsample_byte_buffer_rx[offset + i];
         }
         
         i2s_write += count;
         
-        if(i2s_write == RINGBUFFER_SIZE)
-        {
+        if(i2s_write == RINGBUFFER_SIZE) {
             i2s_write = 0;
         }
     }
