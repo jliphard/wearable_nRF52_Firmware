@@ -118,139 +118,11 @@
 #include "VEML6040.h"   //light levels
 #include "FDC1004.h"    //Capacitence
 #include "AD5593R.h"    //ADC/DAC
-
-//everything for the mic
-#include "app_pwm.h"
-#include "nrf_drv_i2s.h"
+#include "ics43434.h"   //Mic
 
 #include "SEGGER_RTT.h"
 
-
-#define I2S_BUFFER_SIZE     64          // Data handler is called when I2S data bufffer contains (I2S_BUFFER_SIZE/2) 32bit words
-//#define UART_TX_BUF_SIZE    256         // UART TX FIFO buffer size in bytes
-//#define UART_RX_BUF_SIZE    256         // UART RX FIFO buffer size in bytes
-#define RINGBUFFER_SIZE     8192        // Size in bytes of ringbuffer between I2S and UART
-
-static uint32_t          m_buffer_rx[I2S_BUFFER_SIZE];
-static uint32_t          lsample_buffer_rx[(I2S_BUFFER_SIZE/2)];
-static volatile uint8_t  lsample_byte_buffer_rx[(I2S_BUFFER_SIZE*2)];
-static volatile uint8_t  ringbuffer[RINGBUFFER_SIZE];
-static volatile uint32_t i2s_write = 0;             // Ring buffer write pointer
-static volatile uint32_t i2s_read  = 0;             // Ring buffer read pointer
-static bool              m_error_encountered;       // I2S data callback error status
-static volatile bool     ready_flag;                // A PWM ready status
-union
-{
-  uint32_t word;
-  uint8_t  byte_decomp[4];
-}u;
-
-void pwm_ready_callback(uint32_t pwm_id) // PWM ready callback function
-{
-	ready_flag = true;
-}
-
-static bool copy_samples(uint32_t const * p_buffer, uint16_t number_of_words) // I2S data callback read and ring buffer write function
-{
-    uint32_t count, size, offset = 0;
-
-    //SEGGER_RTT_WriteString(0, "copy_samples(uint32_t)\n");
-    
-    memcpy(lsample_buffer_rx, p_buffer, (4*number_of_words)); // Copy I2S data from the callback buffer to a volatile buffer
-	
-    // Parse I2S callback data and load into a byte array
-    for(uint32_t i=0; i<number_of_words; i++) {
-        u.word = lsample_buffer_rx[i];
-        for(uint8_t j=0; j<4; j++) {
-            lsample_byte_buffer_rx[((4*i) + j)] = u.byte_decomp[3-j];
-        }
-    }
-    
-    SEGGER_RTT_printf(0, "%d %d %d %d\r\n", lsample_byte_buffer_rx[0], lsample_byte_buffer_rx[1], lsample_byte_buffer_rx[2] ,lsample_byte_buffer_rx[3]);
-    
-    // Load I2S byte array into the ring buffer and index write pointer
-    count = (4*number_of_words);
-    
-    size = count;
-    
-    if((i2s_write + count) > RINGBUFFER_SIZE) {  // IF I2S byte count is larger than the space before pointer wrap, break into two pieces
-      count = RINGBUFFER_SIZE - i2s_write;
-    }
-    
-    if(count) {
-        for(uint32_t i=0; i<count; i++) {
-            ringbuffer[i2s_write + i] = lsample_byte_buffer_rx[i];
-	}
-        i2s_write += count;
-        size -= count;
-	offset = count;
-        if(i2s_write == RINGBUFFER_SIZE) {  // Wrap the write pointer
-            i2s_write = 0;
-        }
-    }
-    
-    count = size;
-    
-    if(count) { // If broken into two parts, do the second part 
-        
-        for(uint32_t i=0; i<count; i++) {
-            ringbuffer[i2s_write + i] = lsample_byte_buffer_rx[offset + i];
-        }
-        
-        i2s_write += count;
-        
-        if(i2s_write == RINGBUFFER_SIZE) {
-            i2s_write = 0;
-        }
-    }
-	  
-    return true;
-}
-
-static void check_rx_data(uint32_t const * p_buffer, uint16_t number_of_words)
-{
-    if (!m_error_encountered)
-    {
-        m_error_encountered = !copy_samples(p_buffer, number_of_words);
-    }
-}
-
-// This is the I2S data handler - all data exchange related to the I2S transfers is done here.
-static void data_handler(uint32_t const * p_data_received,
-                         uint32_t       * p_data_to_send,
-                         uint16_t         number_of_words)
-{
-    // Non-NULL value in 'p_data_received' indicates that a new portion of
-    // data has been received and should be processed.
-    if (p_data_received != NULL)
-    {
-        check_rx_data(p_data_received, number_of_words);
-    }
-
-    // Non-NULL value in 'p_data_to_send' indicates that the driver needs
-    // a new portion of data to send. Nothing done here; RX only...
-    if (p_data_to_send != NULL)
-    {
-    }
-}
-
-
-void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
-{
-    #ifdef DEBUG
-    app_error_print(id, pc, info);
-    #endif
-
-    while (1);
-}
-
-APP_PWM_INSTANCE(PWM1,1);                                                                                  // Create the instance "PWM1" using TIMER1.
-APP_PWM_INSTANCE(PWM2,2);                                                                                  // Create the instance "PWM2" using TIMER2.
-
-#define BLE_UUID_MENTAID_SERVICE           0x180D 
-//#define BLE_UUID_MENTAID_MEASUREMENT_CHAR  0x2A37
-//#define BLE_UUID_BODY_SENSOR_LOCATION_CHAR 0x2A38
-//UUID string
+#define BLE_UUID_MENTAID_SERVICE         0x180D 
 
 #define DEVICE_NAME                      "MENTAID"                                 /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME                "Stanford University"                     /**< Manufacturer. Will be passed to Device Information Service. */
@@ -1486,30 +1358,15 @@ int main(void)
     
     nrf_delay_ms(500);
     
-    //FLASH_Reset();    
-    //FLASH_Erase();
-    
+    //fire up the mic
+    ICS_Turn_On(); 
+    nrf_delay_ms(500);
+        
     GLOB_datastart = FLASH_Get_First_Available_Location();
     SEGGER_RTT_printf(0, "First empty page: %d\r\n", GLOB_datastart);
     
     flash_red();
-    
-    //static uint8_t lR[16];
      
-    /* The four basic functions are to:
-     * (1) erase
-     * (2) record
-     * (3) record + stream data to phone. 
-     * (4) get data from phone - especially position and time
-     * 
-     * We could advertize for two mins after turn on. 
-     * If no connection -> record
-     * If connection, then would synchronize time, and get occasional GPS packets.
-     * Also, would send data to phone app. 
-     * In the same app, could chose to delete data
-     * Could also flush data to pubnub?
-    */ 
-    
     RTC1_timer_start();
     
     //controls visibility to bluetooth - not clear to me if advertizing interval is honored
@@ -1517,51 +1374,7 @@ int main(void)
      
     //send initial status packet
     update_status_flags();
-    
-    //Digital mic
-    //Define the I2S configuration; running in slave mode and using PWM outputs to provide synthetic SCK and LRCK
-    nrf_drv_i2s_config_t config = NRF_DRV_I2S_DEFAULT_CONFIG;
-    config.sdin_pin             = I2S_SDIN_PIN;
-    config.sdout_pin            = I2S_SDOUT_PIN;
-    config.mode                 = NRF_I2S_MODE_SLAVE;
-    config.mck_setup            = NRF_I2S_MCK_DISABLED;
-    config.sample_width         = NRF_I2S_SWIDTH_24BIT;
-    config.channels             = NRF_I2S_CHANNELS_LEFT;                                                    // Set the I2S microphone to output on the left channel
-    config.format               = NRF_I2S_FORMAT_I2S;
-    err_code                    = nrf_drv_i2s_init(&config, data_handler);                                  // Initialize the I2S driver
-    
-    APP_ERROR_CHECK(err_code);
-	
-    // 1-channel PWM; 16MHz clock and period set in ticks.
-    // The user is responsible for selecting the periods to give the correct ratio for the I2S frame length
-    
-    app_pwm_config_t pwm1_cfg = APP_PWM_DEFAULT_CONFIG_1CH(  25L, PWM_I2S_SCK_PIN);                         // SCK; pick a convenient gpio pin
-    app_pwm_config_t pwm2_cfg = APP_PWM_DEFAULT_CONFIG_1CH(1600L, PWM_I2S_WS_PIN );                         // LRCK; pick a convenient gpio pin. LRCK period = 64X SCK period
-
-    // Initialize and enable PWM's
-    
-    err_code = app_pwm_ticks_init(&PWM1,&pwm1_cfg,pwm_ready_callback);
-    APP_ERROR_CHECK(err_code);
-    
-    err_code = app_pwm_ticks_init(&PWM2,&pwm2_cfg,pwm_ready_callback);
-    APP_ERROR_CHECK(err_code);
-    
-    app_pwm_enable(&PWM1);
-    app_pwm_enable(&PWM2);
-    
-    app_pwm_channel_duty_set(&PWM1, 0, 50);                                                                // Set at 50% duty cycle for square wave
-    app_pwm_channel_duty_set(&PWM2, 0, 50);
-    
-    // Instantiate I2S
-    err_code = nrf_drv_i2s_start(m_buffer_rx, NULL, I2S_BUFFER_SIZE, 0);                                   // RX only; "NULL" XMIT buffer
-       
-    APP_ERROR_CHECK(err_code);
-    
-    memset(m_buffer_rx, 0xCC, sizeof(m_buffer_rx));                                                        // Initialize I2S data callback buffer
-    
-    uint32_t count = 0;
-    uint32_t size = 0;
-        
+            
     while( 1 ) 
     {
 
