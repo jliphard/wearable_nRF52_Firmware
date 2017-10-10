@@ -1212,24 +1212,11 @@ void FLASH_Write_Record( uint8_t wp[] )
   //we write in blocks of 16 lines.
   if( record_counter < 16 )
   {
-    //keep adding to buffer...
-    flash_page_buffer[record_counter * 16 +  0] = wp[ 0];
-    flash_page_buffer[record_counter * 16 +  1] = wp[ 1];  
-    flash_page_buffer[record_counter * 16 +  2] = wp[ 2];  
-    flash_page_buffer[record_counter * 16 +  3] = wp[ 3];  
-    flash_page_buffer[record_counter * 16 +  4] = wp[ 4];  
-    flash_page_buffer[record_counter * 16 +  5] = wp[ 5];  
-    flash_page_buffer[record_counter * 16 +  6] = wp[ 6];  
-    flash_page_buffer[record_counter * 16 +  7] = wp[ 7];  
-    flash_page_buffer[record_counter * 16 +  8] = wp[ 8];  
-    flash_page_buffer[record_counter * 16 +  9] = wp[ 9]; 
-    flash_page_buffer[record_counter * 16 + 10] = wp[10];  
-    flash_page_buffer[record_counter * 16 + 11] = wp[11];  
-    flash_page_buffer[record_counter * 16 + 12] = wp[12];  
-    flash_page_buffer[record_counter * 16 + 13] = wp[13];  
-    flash_page_buffer[record_counter * 16 + 14] = wp[14];
-    flash_page_buffer[record_counter * 16 + 15] = wp[15];
-            
+    //keep adding to buffer...        
+    for(uint8_t i=0; i<16; i++)	{
+        flash_page_buffer[record_counter * 16 + i] = wp[i];
+    };
+
     record_counter++;   
   }
   
@@ -1297,8 +1284,8 @@ void save_or_stream( uint8_t action, uint16_t counter, uint8_t batt, \
     fb[ 4] = temperature;
     fb[ 5] = humidity;
     
-    fb[ 6] = (uint8_t) ( l_white      & 0xff ); 
-    fb[ 7] = (uint8_t) ( l_white >> 8 & 0xff ); 
+    fb[ 6] = (uint8_t) ( l_white       & 0xff ); 
+    fb[ 7] = (uint8_t) ( l_white >> 8  & 0xff ); 
     
     fb[ 8] = (uint8_t) ( ax            & 0xff); 
     fb[ 9] = (uint8_t) ( ax      >> 8  & 0xff); 
@@ -1320,10 +1307,12 @@ void save_or_stream( uint8_t action, uint16_t counter, uint8_t batt, \
     {
         Send_Via_BLE( fb ); 
     }
-    else if (action == 2) //do both
+    else if ( action == 2 ) //do both
     {
         FLASH_Write_Record( fb ); 
         Send_Via_BLE( fb ); 
+    } else {
+        /*do nothing*/    
     }
 }
 
@@ -1389,7 +1378,7 @@ static void update_fast(void)
     BMP280H8 = (uint8_t)( (resultPTH[2]/1000.00)           );
     
     //light intensity
-    //VEML6040_Get_Data(resultVME);
+    VEML6040_Get_Data( resultVME );
     //the different colors are largely useless - just get white
     
     //acceleration
@@ -1397,47 +1386,30 @@ static void update_fast(void)
     
     //capacitive sensing on 4 channels
     FDC1004_Get_Data( resultFDC );
-    
-    /*
-    float ax = (float)resultBMA[0];
-    float ay = (float)resultBMA[1];
-    float az = (float)resultBMA[2];//take off gravity
-    
-    float accelT = (ax*ax) + (ay*ay) + (az*az);
-    
-    accelT = sqrt(accelT);
-    */
-    
-    //SEGGER_RTT_printf(0, "x-axis offset = %d mg\n", (int16_t)(100.0f*(float)offsetX*FCres/256.0f));
-    //SEGGER_RTT_printf(0, "accel:%d\n", (uint16_t)accelT);
         
-    uint8_t action = 0;
+    uint8_t action = 3;
     
-    if( SaveToFLASH && LiveStream )
-    {
-        action = 2;
+    if( SaveToFLASH && LiveStream ) {       //save and stream
+        action = 2;    
+    }
+    else if ( SaveToFLASH && !LiveStream ) {//save only
+        action = 0;  
+    }
+    else if ( !SaveToFLASH && LiveStream ) { //stream only
+        action = 1;  
+    }
+    else {
+        /* !SaveToFLASH && !LiveStream */
+        /* do nothing*/
+    }
+    
+    if(action < 3 ) {
         save_or_stream( action, heartbeat16, battery_level8,
                       BMP280P8, BMP280T8, BMP280H8,
                       resultVME[3],
                       resultBMA[0], resultBMA[1], resultBMA[2] );    
     }
-    else if ( SaveToFLASH && !LiveStream ) //save only
-    {
-        action = 0;
-        save_or_stream( action, heartbeat16, battery_level8,
-                      BMP280P8, BMP280T8, BMP280H8,
-                      resultVME[3],
-                      resultBMA[0], resultBMA[1], resultBMA[2] );    
-    }
-    else if ( !SaveToFLASH && LiveStream ) //stream only
-    {
-        action = 1;
-        save_or_stream( action, heartbeat16, battery_level8,
-                      BMP280P8, BMP280T8, BMP280H8,
-                      resultVME[3],
-                      resultBMA[0], resultBMA[1], resultBMA[2] );    
-    }
-   
+        
 }
 
 static void timeout_handler(void * p_context)
@@ -1488,7 +1460,7 @@ int main(void)
     nrf_delay_ms(500);
     
     //VEML6040 function is broken on board rev 2 - will be fixed for rev 3
-    //VEML6040_Turn_On();
+    VEML6040_Turn_On();
     nrf_delay_ms(500);
     
     FDC1004_Turn_On();
@@ -1592,45 +1564,7 @@ int main(void)
         
     while( 1 ) 
     {
-      // microphone
-      // Push data from the ring buffer to the UART
-      /*
-      while(i2s_read != i2s_write)
-      {
-        if(i2s_write > i2s_read)
-        {
-          count = i2s_write - i2s_read;                                                                    // Data to be read but not wrapped around the end of the ring buffer
-        }
-        else
-        {
-          count = RINGBUFFER_SIZE - i2s_read;                                                              // Data to be read but and wrapped around the end of the ring buffer
-        }
-        
-        if((i2s_read + count) >= RINGBUFFER_SIZE)
-        {
-          count = RINGBUFFER_SIZE - i2s_read;                                                              // There is enough data so that emptying it out requires wrapping around the end of the ring buffer
-        }
-        
-        if(count > 128) count = 128;                                                                       // The "Chunk" size should be <= 128bytes to not overwhelm the UART Tx buffer
-	
-        for(uint32_t i=0; i<count; i++)
-	{
-            while(app_uart_put(ringbuffer[i2s_read + i]) != NRF_SUCCESS);                                    // Load byte-by-byte into UART Tx buffer
-		  size = i+1;
-            }
-	i2s_read += size;
-        
-        if(i2s_read == RINGBUFFER_SIZE)
-        {
-          i2s_read = 0;
-        }
-        
-        if (size != count)
-        {
-          break;
-        }
-      } //while
-      */
+
         //upload all stored data to phone, for plotting/cloud upload
         if ( PleaseFlush ) {
             
