@@ -43,6 +43,6 @@
     
     void VEML6040_Turn_On( void );
     void VEML6040_Turn_Off( void );
-    void VEML6040_Get_Data(uint16_t * dest);
+    void VEML6040_Get_Data(int16_t * dest);
 
 #endif /* MA_VEML6040_ */

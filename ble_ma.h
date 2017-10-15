@@ -125,11 +125,11 @@ struct ble_ma_s
     uint8_t                      max_ma_len;                                           /**< Current maximum MA measurement length, adjusted according to the current ATT MTU. */
 };
 
-static uint32_t mentaid_measurement_char_add(ble_ma_t * p_ma, const ble_ma_init_t * p_ma_init);
+//static uint32_t mentaid_measurement_char_add(ble_ma_t * p_ma, const ble_ma_init_t * p_ma_init);
 
-static uint32_t mentaid_command_char_add(ble_ma_t * p_ma, const ble_ma_init_t * p_ma_init);
+//static uint32_t mentaid_command_char_add(ble_ma_t * p_ma, const ble_ma_init_t * p_ma_init);
 
-static uint32_t mentaid_status_char_add(ble_ma_t * p_ma, const ble_ma_init_t * p_ma_init);
+//static uint32_t mentaid_status_char_add(ble_ma_t * p_ma, const ble_ma_init_t * p_ma_init);
 
 /**@brief Function for initializing the Mentaid Service.
  *

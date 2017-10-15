@@ -73,7 +73,7 @@ void VEML6040_Turn_Off( void )
     writeBytes(VEML6040_ADDRESS, packet, 3);
 }    
 
-void VEML6040_Get_Data(uint16_t * dest)
+void VEML6040_Get_Data(int16_t * dest)
 {
     uint8_t rawData[2] = {0, 0};
     

@@ -316,7 +316,7 @@ static uint32_t mentaid_status_char_add(ble_ma_t * p_ma, const ble_ma_init_t * p
     attr_char_value.init_len  = 1;
     attr_char_value.init_offs = 0;
     attr_char_value.max_len   = 1;
-    attr_char_value.p_value   = 12;
+    attr_char_value.p_value   = (uint8_t*)12;
 
     return sd_ble_gatts_characteristic_add(p_ma->service_handle,
                                            &char_md,

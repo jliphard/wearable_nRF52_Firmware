@@ -437,12 +437,12 @@ static void RTC1_timer_start(void)
 
 /**@brief Function for starting application timers.
  */
-static void RTC1_timer_stop(void)
+/*static void RTC1_timer_stop(void)
 {
     //Stop application timers.
     err_code = app_timer_stop(m_timer_id);
     APP_ERROR_CHECK(err_code);
-}
+}*/
 
 /**@brief Function for the GAP initialization.
  *
@@ -1049,7 +1049,7 @@ static void advertising_init(void)
  *
  * @param[out] p_erase_bonds  Will be true if the clear bonding button was pressed to wake the application up.
  */
-static void buttons_leds_init(bool * p_erase_bonds)
+/*static void buttons_leds_init(bool * p_erase_bonds)
 {
     bsp_event_t startup_event;
 
@@ -1060,23 +1060,23 @@ static void buttons_leds_init(bool * p_erase_bonds)
     APP_ERROR_CHECK(err_code);
 
     *p_erase_bonds = (startup_event == BSP_EVENT_CLEAR_BONDING_DATA);
-}
+}*/
 
 /**@brief Function for initializing the nrf log module.
  */
-static void log_init(void)
+/*static void log_init(void)
 {
     err_code = NRF_LOG_INIT(NULL);
     APP_ERROR_CHECK(err_code);
-}
+}*/
 
 /**@brief Function for the Power manager.
  */
-static void power_manage(void)
+/*static void power_manage(void)
 {
     err_code = sd_app_evt_wait();
     APP_ERROR_CHECK(err_code);
-}
+}*/
 
 //=====================================
 void FLASH_Write_Record( uint8_t wp[] )
