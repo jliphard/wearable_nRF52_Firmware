@@ -69,7 +69,6 @@
 
 #include <stdint.h>
 #include <string.h>
-
 #include "nordic_common.h"
 #include "nrf.h"
 #include "app_error.h"
@@ -85,82 +84,38 @@
 #include "ics43434.h"
 #include "SEGGER_RTT.h"
 
-#define I2S_BUFFER_SIZE     64          // Data handler is called when I2S data bufffer contains (I2S_BUFFER_SIZE/2) 32bit words
-#define RINGBUFFER_SIZE     8192        // Size in bytes of ringbuffer between I2S and UART
-
-static uint32_t          m_buffer_rx[I2S_BUFFER_SIZE];
-static uint32_t          lsample_buffer_rx[(I2S_BUFFER_SIZE/2)];
-static volatile uint8_t  lsample_byte_buffer_rx[(I2S_BUFFER_SIZE*2)];
-static volatile uint8_t  ringbuffer[RINGBUFFER_SIZE];
-static volatile uint32_t i2s_write = 0;             // Ring buffer write pointer
-static volatile uint32_t i2s_read  = 0;             // Ring buffer read pointer
-static bool              m_error_encountered;       // I2S data callback error status
-static volatile bool     ready_flag;                // A PWM ready status
-
-union
+struct psd_bin_t
 {
-  uint32_t word;
-  uint8_t  byte_decomp[4];
-}u;
+  uint16_t  freq;
+  float32_t complex_mag;
+};
+static uint32_t           m_buffer_rx[I2S_BUFFER_SIZE];
+static float32_t          m_fft_input_f32[I2S_BUFFER_SIZE];     // FFT input array. Time domain
+static float32_t          m_fft_output_f32[I2S_BUFFER_SIZE/2];  // FFT output data; individual scan. Frequency domain
+static struct psd_bin_t   psd_f32[I2S_BUFFER_SIZE/2];           // FFT output data; scan average. Frequency domain
+static bool               m_error_encountered;                  // I2S data callback error status
+static volatile bool      pwm_ready_flag;                       // A PWM ready status
+static uint8_t            i2s_data_ready   = 0;                 // I2S data ready for FFT analysis
+static uint8_t            psd_avg_count    = 0;                 // FFT scan counter for scan averaging
+static uint32_t           m_ifft_flag      = 0;                 // Flag that selects forward (0) or inverse (1) transform.
+static uint32_t           m_do_bit_reverse = 1;                 // Flag that enables (1) or disables (0) bit reversal of output.
 
-void pwm_ready_callback(uint32_t pwm_id) // PWM ready callback function
+
+static void pwm_ready_callback(uint32_t pwm_id)                                                            // PWM ready callback function
 {
-	ready_flag = true;
+	pwm_ready_flag = true;
 }
 
-static bool copy_samples(uint32_t const * p_buffer, uint16_t number_of_words) // I2S data callback read and ring buffer write function
+static bool copy_samples(uint32_t const * p_buffer, uint16_t number_of_words)                              // I2S data callback read and FFT buffer write function
 {
-    uint32_t count, size, offset = 0;
-
-    memcpy(lsample_buffer_rx, p_buffer, (4*number_of_words)); // Copy I2S data from the callback buffer to a volatile buffer
-	
-    // Parse I2S callback data and load into a byte array
-    for(uint32_t i=0; i<number_of_words; i++) {
-        u.word = lsample_buffer_rx[i];
-        for(uint8_t j=0; j<4; j++) {
-            lsample_byte_buffer_rx[((4*i) + j)] = u.byte_decomp[3-j];
-        }
-    }
-    
-    SEGGER_RTT_printf(0, "%d %d %d %d\r\n", lsample_byte_buffer_rx[0], lsample_byte_buffer_rx[1], lsample_byte_buffer_rx[2] ,lsample_byte_buffer_rx[3]);
-    
-    // Load I2S byte array into the ring buffer and index write pointer
-    count = (4*number_of_words);
-    
-    size = count;
-    
-    if((i2s_write + count) > RINGBUFFER_SIZE) {  // IF I2S byte count is larger than the space before pointer wrap, break into two pieces
-      count = RINGBUFFER_SIZE - i2s_write;
-    }
-    
-    if(count) {
-        for(uint32_t i=0; i<count; i++) {
-            ringbuffer[i2s_write + i] = lsample_byte_buffer_rx[i];
-	}
-        i2s_write += count;
-        size -= count;
-	offset = count;
-        if(i2s_write == RINGBUFFER_SIZE) {  // Wrap the write pointer
-            i2s_write = 0;
-        }
-    }
-    
-    count = size;
-    
-    if(count) { // If broken into two parts, do the second part 
-        
-        for(uint32_t i=0; i<count; i++) {
-            ringbuffer[i2s_write + i] = lsample_byte_buffer_rx[offset + i];
-        }
-        
-        i2s_write += count;
-        
-        if(i2s_write == RINGBUFFER_SIZE) {
-            i2s_write = 0;
-        }
-    }
-	  
-    return true;
+ for(uint32_t i=0; i<(I2S_BUFFER_SIZE/2); i++)
+  {
+    m_fft_input_f32[2*i]       = (float32_t)((int32_t)p_buffer[i]);
+	m_fft_input_f32[(2*i + 1)] = 0.0f;
+  }
+  //SEGGER_RTT_printf(0, "%f %f %f %f\r\n", m_fft_input_f32[0], m_fft_input_f32[2], m_fft_input_f32[4], m_fft_input_f32[6]);
+  i2s_data_ready = 1;
+  return true;
 }
 
 static void check_rx_data(uint32_t const * p_buffer, uint16_t number_of_words)
@@ -200,35 +155,51 @@ void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
     while (1);
 }
 
-APP_PWM_INSTANCE(PWM1,1); // Create the instance "PWM1" using TIMER1.
-APP_PWM_INSTANCE(PWM2,2); // Create the instance "PWM2" using TIMER2.
 
-void ICS_Turn_On( void ) 
+/**
+ * @brief Function for processing generated sine wave samples.
+ * @param[in] p_input        Pointer to input data array with complex number samples in time domain.
+ * @param[in] p_input_struct Pointer to cfft instance structure describing input data.
+ * @param[out] p_output      Pointer to processed data (bins) array in frequency domain.
+ * @param[in] output_size    Processed data array size.
+ */
+static void fft_process(float32_t *                   p_input,
+                        const arm_cfft_instance_f32 * p_input_struct,
+                        float32_t *                   p_output,
+                        uint16_t                      output_size)
 {
-    //Digital mic
-    //Define the I2S configuration; running in slave mode and using PWM outputs to provide synthetic SCK and LRCK
+    arm_cfft_f32(p_input_struct, p_input, m_ifft_flag, m_do_bit_reverse);                                  // Use CFFT module to process the data
+    arm_cmplx_mag_f32(p_input, p_output, output_size);                                                     // Calculate the magnitude at each bin using Complex Magnitude Module function
+}
+
+
+APP_PWM_INSTANCE(PWM1,1);                                                                                  // Create the instance "PWM1" using TIMER1.
+APP_PWM_INSTANCE(PWM2,2);                                                                                  // Create the instance "PWM2" using TIMER2.
+
+void ICS_Turn_On(void) 
+{
     ret_code_t err_code;
     
+    //Digital mic
+    //Define the I2S configuration; running in slave mode and using PWM outputs to provide synthetic SCK and LRCK
     nrf_drv_i2s_config_t config = NRF_DRV_I2S_DEFAULT_CONFIG;
     config.sdin_pin             = I2S_SDIN_PIN;
     config.sdout_pin            = I2S_SDOUT_PIN;
     config.mode                 = NRF_I2S_MODE_SLAVE;
     config.mck_setup            = NRF_I2S_MCK_DISABLED;
     config.sample_width         = NRF_I2S_SWIDTH_24BIT;
-    config.channels             = NRF_I2S_CHANNELS_LEFT;                                                    // Set the I2S microphone to output on the left channel
+    config.channels             = NRF_I2S_CHANNELS_LEFT;                                                   // Set the I2S microphone to output on the left channel
     config.format               = NRF_I2S_FORMAT_I2S;
-    err_code                    = nrf_drv_i2s_init(&config, data_handler);                                  // Initialize the I2S driver
+    err_code                    = nrf_drv_i2s_init(&config, data_handler);                                 // Initialize the I2S driver
     
     APP_ERROR_CHECK(err_code);
 	
     // 1-channel PWM; 16MHz clock and period set in ticks.
     // The user is responsible for selecting the periods to give the correct ratio for the I2S frame length
-    
-    app_pwm_config_t pwm1_cfg = APP_PWM_DEFAULT_CONFIG_1CH(  25L, PWM_I2S_SCK_PIN);                         // SCK; pick a convenient gpio pin
-    app_pwm_config_t pwm2_cfg = APP_PWM_DEFAULT_CONFIG_1CH(1600L, PWM_I2S_WS_PIN );                         // LRCK; pick a convenient gpio pin. LRCK period = 64X SCK period
+    app_pwm_config_t pwm1_cfg = APP_PWM_DEFAULT_CONFIG_1CH(16000000/(64*AUDIO_RATE), PWM_I2S_SCK_PIN);    // SCK; pick a convenient gpio pin
+    app_pwm_config_t pwm2_cfg = APP_PWM_DEFAULT_CONFIG_1CH(16000000L/AUDIO_RATE, PWM_I2S_WS_PIN);         // LRCK; pick a convenient gpio pin. LRCK period = 64X SCK period
 
     // Initialize and enable PWM's
-    
     err_code = app_pwm_ticks_init(&PWM1,&pwm1_cfg,pwm_ready_callback);
     APP_ERROR_CHECK(err_code);
     
@@ -246,5 +217,83 @@ void ICS_Turn_On( void )
        
     APP_ERROR_CHECK(err_code);
     
-    memset(m_buffer_rx, 0xCC, sizeof(m_buffer_rx));                                                        // Initialize I2S data callback buffer    
+	memset(m_buffer_rx, 0xCC, sizeof(m_buffer_rx));                                                        // Initialize I2S data callback buffer
+    for(uint32_t i=0; i<I2S_BUFFER_SIZE/2; i++)                                                            // Initialize the PSD averaging array
+    {
+      psd_f32[i].complex_mag = 0.0f;
+      psd_f32[i].freq        = i;
+    }
+}
+
+
+int psd_bin_comp(const void *elem1, const void *elem2)                                                  // PSD complex mag float comparison function for qsort
+{
+    struct psd_bin_t *e1 = (struct psd_bin_t *)elem1;                                                   // Cast pointers to the PSD data structure
+    struct psd_bin_t *e2 = (struct psd_bin_t *)elem2;                                                   // Sort WRT the complex mag
+    if(e1->complex_mag < e2->complex_mag)                                                               // Returns -1 if elem1 < elem2
+        return -1;
+    return e1->complex_mag > e2->complex_mag;                                                           // Returns 0 if elem1 = elem2 and 1 if elem1 > elem2
+}
+
+
+fft_results_t sample_mic(float sample_time)
+{
+    uint8_t psd_avg_limit = (uint8_t)sample_time*AUDIO_RATE/1024;
+    fft_results_t results;
+
+    while(1)
+    {
+        if(i2s_data_ready)
+        {
+            i2s_data_ready = 0;
+            fft_process(m_fft_input_f32, &arm_cfft_sR_f32_len1024, m_fft_output_f32, I2S_BUFFER_SIZE/2);
+		
+            /* Clear FPSCR register and clear pending FPU interrupts. This code is based on
+               nRF5x_release_notes.txt in documentation folder. It is a necessary part of code when
+               application using power saving mode and after handling FPU errors in polling mode. */
+            __set_FPSCR(__get_FPSCR() & ~(FPU_EXCEPTION_MASK));                                            // Clear any exceptions generated the FFT analysis
+            (void) __get_FPSCR();
+            NVIC_ClearPendingIRQ(FPU_IRQn);
+		    for(uint32_t i=0; i<I2S_BUFFER_SIZE/4; i++)
+            {
+                psd_f32[i].complex_mag += m_fft_output_f32[i];                                             // Add new FFT value to the sum array element-by-element
+            }
+            psd_avg_count++;
+        }
+        if(psd_avg_count >= psd_avg_limit)
+        {
+            for(uint32_t i=0; i<I2S_BUFFER_SIZE/4; i++)
+            {
+                psd_f32[i].complex_mag /= (float)psd_avg_limit;                                            // Divide PSD sum arrray element by the number of scans
+                if(i > 0)
+                {
+                    psd_f32[i].complex_mag *= 2.0f;
+                }
+		        /*printf("\r\n%.3f,%.4e", (float)AUDIO_RATE*(float)psd_f32[i].freq/1022.0f,                  // Diagnostic; print output to UART for inspection/analysis
+                       psd_f32[i].complex_mag);*/
+            }
+            /*printf("\r\n");*/
+            psd_avg_count = 0;
+            break;
+        }
+    }
+    qsort(psd_f32, 512, sizeof(struct psd_bin_t), psd_bin_comp);                                           // Sorts in ascending order of complex mag
+    results.max = psd_f32[511].complex_mag;                                                                // Maximum is the last element in the sort
+    results.avg = 0.0f;
+    for(uint32_t i=0; i<512; i++)
+    {
+        results.avg += psd_f32[i].complex_mag;
+    }
+    results.avg /= 512.0f;
+    for(uint8_t i=0; i<4; i++)                                                                             // Load the four strongest PSD peaks into the results structure variable
+    {
+        results.freq[i]        = (float)AUDIO_RATE*(float)psd_f32[511 - i].freq/1022.0f;
+        results.complex_mag[i] = psd_f32[511 - i].complex_mag;
+    }
+    for(uint32_t i=0; i<512; i++)                                                                          // Reset PSD results arrays for the next call
+    {
+        psd_f32[i].complex_mag = 0.0f;
+		psd_f32[i].freq        = i;
+    }
+    return results;
 }

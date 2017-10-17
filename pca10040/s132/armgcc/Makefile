@@ -2,8 +2,8 @@ PROJECT_NAME     := mentaid
 TARGETS          := nrf52832_xxaa
 OUTPUT_DIRECTORY := _build
 
-SDK_ROOT := /ARM/nRF5_SDK_13/
-PROJ_DIR := /Users/janliphardt/GH_wearable_Firmware/
+SDK_ROOT := ../../../../../..
+PROJ_DIR := ../../..
 
 $(OUTPUT_DIRECTORY)/nrf52832_xxaa.out: LINKER_SCRIPT  := mentaid.ld
 # 
@@ -76,6 +76,8 @@ SRC_FILES += \
   $(SDK_ROOT)/components/ble/ble_services/ble_hrs/ble_hrs.c \
   $(SDK_ROOT)/components/softdevice/common/softdevice_handler/softdevice_handler.c \
   $(SDK_ROOT)/components/toolchain/gcc/gcc_startup_nrf52.S \
+  $(SDK_ROOT)/components/drivers_nrf/nrf_soc_nosd/nrf_nvic.c \
+  $(SDK_ROOT)/components/drivers_nrf/nrf_soc_nosd/nrf_soc.c \
   $(SDK_ROOT)/components/toolchain/system_nrf52.c \
   $(SDK_ROOT)/external/segger_rtt/RTT_Syscalls_GCC.c \
   $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT.c \
@@ -83,6 +85,8 @@ SRC_FILES += \
 
 # Include folders common to all targets
 INC_FOLDERS += \
+  $(PROJ_DIR) \
+  $(SDK_ROOT)/components/device \
   $(SDK_ROOT)/components/drivers_nrf/comp \
   $(SDK_ROOT)/components/drivers_nrf/twi_master \
   $(SDK_ROOT)/components/drivers_nrf/gpiote \
@@ -104,6 +108,8 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/drivers_nrf/saadc \
   $(SDK_ROOT)/components/drivers_nrf/pdm \
   $(SDK_ROOT)/components/drivers_nrf/delay \
+  $(SDK_ROOT)/components/toolchain/cmsis/include \
+  $(SDK_ROOT)/components/softdevice/s132/headers/nrf52 \
   $(SDK_ROOT)/components/drivers_nrf/timer \
   $(SDK_ROOT)/components/drivers_nrf/pwm \
   $(SDK_ROOT)/components/drivers_nrf/rng \
@@ -197,8 +203,10 @@ INC_FOLDERS += \
 
 # Libraries common to all targets
 LIB_FILES += \
+$(SDK_ROOT)/components/toolchain/cmsis/dsp/GCC/libarm_cortexM4lf_math.a \
 
 # C flags common to all targets
+CFLAGS += -DARM_MATH_CM4
 CFLAGS += -DBLE_STACK_SUPPORT_REQD
 CFLAGS += -DBOARD_D52_BA
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
@@ -265,6 +273,8 @@ LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 LDFLAGS += -Wl,--gc-sections
 # use newlib in nano version
 LDFLAGS += --specs=nano.specs -lc -lnosys
+# Enable printf() to handle floats
+LDFLAGS += -u _printf_float
 
 .PHONY: $(TARGETS) default all clean help flash flash_softdevice
 
