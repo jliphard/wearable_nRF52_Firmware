@@ -56,22 +56,24 @@ void FDC1004_Configure( void )
 {
     uint8_t CH_config[3];
         
-    CH_config[2] = 0x00; //we are not using the CAPDAC    
+    //CH_config[2] = 0x40; //= 6.4 pF
+    //CH_config[2] = 0x20; //= 3.175 pF
+    CH_config[2] = 0x00; //= 0 pF
         
-    CH_config[0] = 0x08;
-    CH_config[1] = 0x1C;
+    CH_config[0] = 0x08; //Measurement 1 Configuration
+    CH_config[1] = 0x10; //000 100 00
     writeBytes( FDC1004_ADDRESS, CH_config, 3);
         
-    CH_config[0] = 0x09;
-    CH_config[1] = 0x3C;
+    CH_config[0] = 0x09; //Measurement 2 Configuration
+    CH_config[1] = 0x30; //001 100 00
     writeBytes( FDC1004_ADDRESS, CH_config, 3);
         
-    CH_config[0] = 0x0A;
-    CH_config[1] = 0x5C;
+    CH_config[0] = 0x0A; //Measurement 3 Configuration
+    CH_config[1] = 0x50; //010 100 00
     writeBytes( FDC1004_ADDRESS, CH_config, 3);
         
-    CH_config[0] = 0x0B;
-    CH_config[1] = 0x7C;
+    CH_config[0] = 0x0B; //Measurement 4 Configuration
+    CH_config[1] = 0x70; //011 100 00
     writeBytes( FDC1004_ADDRESS, CH_config, 3);
         
 /*
@@ -85,16 +87,13 @@ but Register 0x0C must be written in a single transaction.
 */ 
         
 //note the the data sheet is wrong. 0540 is repeated measurement, not single measurement!
-//we should oversample by 2x, so 200 s/s probably ok
-//0x5C = 0 000 01 0 1 = 100 s/s, repeat on
-//0x04 = 0 000 01 0 0 = 100 s/s, repeat off
-        
-    CH_config[0] = 0x0C;
-    CH_config[1] = 0x05; 
+    
+    CH_config[0] = 0x0C; // FDC Register Description
+  //CH_config[1] = 0x11; // 0 00 10 0 0 1 // 200S/s, with repeat == 0x11
+    CH_config[1] = 0x19; // 0 00 11 0 0 1 // 400S/s, with repeat == 0x19
+    CH_config[2] = 0xF0; // 1111 0000 = all 4 channels
 
-    CH_config[2] = 0xF0; //1111 0000 = all 4 channels
-
-//let's go!
+    //let's go!
     writeBytes( FDC1004_ADDRESS, CH_config, 3);
 }
 
@@ -124,8 +123,8 @@ void FDC1004_Get_Data( float * result )
 
   if( SEGGER_FDC )
   {
-    SEGGER_RTT_printf(0, "FDC1004.1:%d %d %d\n", dM[0], dM[1], dL[0], dL[1]);
-    SEGGER_RTT_printf(0, "FDC1004.1:%d\n", (int32_t)(result[0]*1000));
+    //SEGGER_RTT_printf(0, "FDC1004.1:%d %d %d\n", dM[0], dM[1], dL[0], dL[1]);
+    SEGGER_RTT_printf(0, "FDC:%d ", (int32_t)(result[0]*1000));
   }
     
   readBytes(FDC1004_ADDRESS, 0x02, dM, 2);
@@ -134,8 +133,8 @@ void FDC1004_Get_Data( float * result )
   
   if( SEGGER_FDC )
   {
-    SEGGER_RTT_printf(0, "FDC1004.2:%d %d %d\n", dM[0], dM[1], dL[0], dL[1]);
-    SEGGER_RTT_printf(0, "FDC1004.2:%d\n", (int32_t)(result[1]*1000));
+    //SEGGER_RTT_printf(0, "FDC1004.2:%d %d %d\n", dM[0], dM[1], dL[0], dL[1]);
+    SEGGER_RTT_printf(0, "%d ", (int32_t)(result[1]*1000));
   }
   
   readBytes(FDC1004_ADDRESS, 0x04, dM, 2);
@@ -144,8 +143,8 @@ void FDC1004_Get_Data( float * result )
   
   if( SEGGER_FDC )
   {
-    SEGGER_RTT_printf(0, "FDC1004.3:%d %d %d\n", dM[0], dM[1], dL[0], dL[1]);
-    SEGGER_RTT_printf(0, "FDC1004.3:%d\n", (int32_t)(result[2]*1000));
+    //SEGGER_RTT_printf(0, "FDC1004.3:%d %d %d\n", dM[0], dM[1], dL[0], dL[1]);
+    SEGGER_RTT_printf(0, "%d ", (int32_t)(result[2]*1000));
   }
   
   readBytes(FDC1004_ADDRESS, 0x06, dM, 2);
@@ -154,8 +153,8 @@ void FDC1004_Get_Data( float * result )
   
   if( SEGGER_FDC )
   {
-    SEGGER_RTT_printf(0, "FDC1004.4:%d %d %d\n", dM[0], dM[1], dL[0], dL[1]);
-    SEGGER_RTT_printf(0, "FDC1004.4:%d\n", (int32_t)(result[3]*1000));
+    //SEGGER_RTT_printf(0, "FDC1004.4:%d %d %d\n", dM[0], dM[1], dL[0], dL[1]);
+    SEGGER_RTT_printf(0, "%d\n", (int32_t)(result[3]*1000));
   }   
   
 }  

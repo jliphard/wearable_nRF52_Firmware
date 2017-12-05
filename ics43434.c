@@ -89,6 +89,7 @@ struct psd_bin_t
   uint16_t  freq;
   float32_t complex_mag;
 };
+
 static uint32_t           m_buffer_rx[I2S_BUFFER_SIZE];
 static float32_t          m_fft_input_f32[I2S_BUFFER_SIZE];     // FFT input array. Time domain
 static float32_t          m_fft_output_f32[I2S_BUFFER_SIZE/2];  // FFT output data; individual scan. Frequency domain
@@ -100,21 +101,129 @@ static uint8_t            psd_avg_count    = 0;                 // FFT scan coun
 static uint32_t           m_ifft_flag      = 0;                 // Flag that selects forward (0) or inverse (1) transform.
 static uint32_t           m_do_bit_reverse = 1;                 // Flag that enables (1) or disables (0) bit reversal of output.
 
+fft_results_t results;
 
 static void pwm_ready_callback(uint32_t pwm_id)                                                            // PWM ready callback function
 {
-	pwm_ready_flag = true;
+    pwm_ready_flag = true;
 }
 
-static bool copy_samples(uint32_t const * p_buffer, uint16_t number_of_words)                              // I2S data callback read and FFT buffer write function
+/**
+ * @brief Function for processing generated sine wave samples.
+ * @param[in] p_input        Pointer to input data array with complex number samples in time domain.
+ * @param[in] p_input_struct Pointer to cfft instance structure describing input data.
+ * @param[out] p_output      Pointer to processed data (bins) array in frequency domain.
+ * @param[in] output_size    Processed data array size.
+ */
+static void fft_process(float32_t *                   p_input,
+                        const arm_cfft_instance_f32 * p_input_struct,
+                        float32_t *                   p_output,
+                        uint16_t                      output_size)
 {
- for(uint32_t i=0; i<(I2S_BUFFER_SIZE/2); i++)
-  {
-    m_fft_input_f32[2*i]       = (float32_t)((int32_t)p_buffer[i]);
+    arm_cfft_f32(p_input_struct, p_input, m_ifft_flag, m_do_bit_reverse); // Use CFFT module to process the data
+    arm_cmplx_mag_f32(p_input, p_output, output_size);                    // Calculate the magnitude at each bin using Complex Magnitude Module function
+}
+
+int psd_bin_comp(const void *elem1, const void *elem2) // PSD complex mag float comparison function for qsort
+{
+    struct psd_bin_t *e1 = (struct psd_bin_t *)elem1; // Cast pointers to the PSD data structure
+    struct psd_bin_t *e2 = (struct psd_bin_t *)elem2; // Sort WRT the complex mag
+    if(e1->complex_mag < e2->complex_mag)             // Returns -1 if elem1 < elem2
+        return -1;
+    return e1->complex_mag > e2->complex_mag;         // Returns 0 if elem1 = elem2 and 1 if elem1 > elem2
+}
+
+static bool copy_samples(uint32_t const * p_buffer, uint16_t number_of_words) // I2S data callback read and FFT buffer write function
+{
+    //We process every 20 datapackets - no idea how long that actually is.  
+    uint8_t psd_avg_limit = 20; //(uint8_t)sample_time*AUDIO_RATE/1024;
+    
+    for(uint32_t i=0; i<(I2S_BUFFER_SIZE/2); i++)
+    {
+        m_fft_input_f32[2*i]       = (float32_t)((int32_t)p_buffer[i]);
 	m_fft_input_f32[(2*i + 1)] = 0.0f;
-  }
-  //SEGGER_RTT_printf(0, "%f %f %f %f\r\n", m_fft_input_f32[0], m_fft_input_f32[2], m_fft_input_f32[4], m_fft_input_f32[6]);
-  i2s_data_ready = 1;
+    }
+    
+    //SEGGER_RTT_WriteString(0, "bool copy_samples\n");
+    //SEGGER_RTT_printf(0, "%f %f %f %f\r\n", m_fft_input_f32[0], m_fft_input_f32[2], m_fft_input_f32[4], m_fft_input_f32[6]);
+    i2s_data_ready = 1;
+  
+    //here, we are adding new data
+    if(1==1)
+    {
+        fft_process(m_fft_input_f32, &arm_cfft_sR_f32_len1024, m_fft_output_f32, I2S_BUFFER_SIZE/2);
+		
+        /* Clear FPSCR register and clear pending FPU interrupts. This code is based on
+           nRF5x_release_notes.txt in documentation folder. It is a necessary part of code when
+           application using power saving mode and after handling FPU errors in polling mode. */
+        __set_FPSCR(__get_FPSCR() & ~(FPU_EXCEPTION_MASK)); // Clear any exceptions generated the FFT analysis
+            
+        (void) __get_FPSCR();
+            
+        NVIC_ClearPendingIRQ(FPU_IRQn);
+            
+        for(uint32_t i=0; i<I2S_BUFFER_SIZE/4; i++)
+        {
+            psd_f32[i].complex_mag += m_fft_output_f32[i]; // Add new FFT value to the sum array element-by-element
+        }
+            
+        psd_avg_count++;
+            
+        //SEGGER_RTT_printf(0, "%d\r\n", psd_avg_count);
+    }
+  
+    //ok - we have enough data - let's process it
+    if(psd_avg_count >= psd_avg_limit)
+    {
+        for(uint32_t i=0; i<I2S_BUFFER_SIZE/4; i++)
+        {
+            psd_f32[i].complex_mag /= (float)psd_avg_limit; // Divide PSD sum array element by the number of scans
+        
+            if(i > 0)
+            {
+                psd_f32[i].complex_mag *= 2.0f;
+            }
+	/* // Diagnostic; print output to UART for inspection/analysis
+        printf("\r\n%.3f,%.4e", (float)AUDIO_RATE*(float)psd_f32[i].freq/1022.0f, 
+        psd_f32[i].complex_mag);
+         */
+        }
+        /*printf("\r\n");*/
+        psd_avg_count = 0;
+        //SEGGER_RTT_printf(0, "%d\r\n", psd_avg_count);
+    
+        qsort(psd_f32, 512, sizeof(struct psd_bin_t), psd_bin_comp); // Sorts in ascending order of complex mag
+        results.max = psd_f32[511].complex_mag;                      // Maximum is the last element in the sort
+        results.avg = 0.0f;
+    
+        for(uint32_t i=0; i<512; i++)
+        {
+            results.avg += psd_f32[i].complex_mag;
+        }
+    
+        results.avg /= 512.0f;
+    
+        for(uint8_t i=0; i<3; i++) // Load the four strongest PSD peaks into the results structure variable
+        {
+            results.freq[i]        = (float)AUDIO_RATE*(float)psd_f32[511 - i].freq/1022.0f;
+            results.complex_mag[i] = psd_f32[511 - i].complex_mag;
+        }
+    
+        for(uint32_t i=0; i<512; i++) // Reset PSD results arrays for the next call
+        {
+            psd_f32[i].complex_mag = 0.0f;
+            psd_f32[i].freq = i;
+        }
+        
+        if ( SEGGER_MIC == 1 )
+        {
+            //SEGGER_RTT_WriteString(0, "All done!\n");
+            SEGGER_RTT_printf(0, "Audio max: %d avg: %d\n", (uint32_t)(results.max), (uint32_t)(results.avg));
+            SEGGER_RTT_printf(0, "Audio f: %d %d %d\n", (uint32_t)(results.freq[0]), (uint32_t)(results.freq[1]), (uint32_t)(results.freq[2]));
+            SEGGER_RTT_printf(0, "Audio m: %d %d %d\n", (uint32_t)(results.complex_mag[0]), (uint32_t)(results.complex_mag[1]), (uint32_t)(results.complex_mag[2]));
+        }
+    }    
+  
   return true;
 }
 
@@ -145,7 +254,6 @@ static void data_handler(uint32_t const * p_data_received,
     }
 }
 
-
 void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
 {
     #ifdef DEBUG
@@ -155,26 +263,13 @@ void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
     while (1);
 }
 
+APP_PWM_INSTANCE(PWM1,1); // Create the instance "PWM1" using TIMER1.
+APP_PWM_INSTANCE(PWM2,2); // Create the instance "PWM2" using TIMER2.
 
-/**
- * @brief Function for processing generated sine wave samples.
- * @param[in] p_input        Pointer to input data array with complex number samples in time domain.
- * @param[in] p_input_struct Pointer to cfft instance structure describing input data.
- * @param[out] p_output      Pointer to processed data (bins) array in frequency domain.
- * @param[in] output_size    Processed data array size.
- */
-static void fft_process(float32_t *                   p_input,
-                        const arm_cfft_instance_f32 * p_input_struct,
-                        float32_t *                   p_output,
-                        uint16_t                      output_size)
+void ICS_Turn_Off(void) 
 {
-    arm_cfft_f32(p_input_struct, p_input, m_ifft_flag, m_do_bit_reverse);                                  // Use CFFT module to process the data
-    arm_cmplx_mag_f32(p_input, p_output, output_size);                                                     // Calculate the magnitude at each bin using Complex Magnitude Module function
-}
-
-
-APP_PWM_INSTANCE(PWM1,1);                                                                                  // Create the instance "PWM1" using TIMER1.
-APP_PWM_INSTANCE(PWM2,2);                                                                                  // Create the instance "PWM2" using TIMER2.
+    nrf_drv_i2s_stop();
+};
 
 void ICS_Turn_On(void) 
 {
@@ -217,7 +312,8 @@ void ICS_Turn_On(void)
        
     APP_ERROR_CHECK(err_code);
     
-	memset(m_buffer_rx, 0xCC, sizeof(m_buffer_rx));                                                        // Initialize I2S data callback buffer
+    memset(m_buffer_rx, 0xCC, sizeof(m_buffer_rx));                                                        // Initialize I2S data callback buffer
+    
     for(uint32_t i=0; i<I2S_BUFFER_SIZE/2; i++)                                                            // Initialize the PSD averaging array
     {
       psd_f32[i].complex_mag = 0.0f;
@@ -225,75 +321,94 @@ void ICS_Turn_On(void)
     }
 }
 
-
-int psd_bin_comp(const void *elem1, const void *elem2)                                                  // PSD complex mag float comparison function for qsort
-{
-    struct psd_bin_t *e1 = (struct psd_bin_t *)elem1;                                                   // Cast pointers to the PSD data structure
-    struct psd_bin_t *e2 = (struct psd_bin_t *)elem2;                                                   // Sort WRT the complex mag
-    if(e1->complex_mag < e2->complex_mag)                                                               // Returns -1 if elem1 < elem2
-        return -1;
-    return e1->complex_mag > e2->complex_mag;                                                           // Returns 0 if elem1 = elem2 and 1 if elem1 > elem2
-}
-
-
 fft_results_t sample_mic(float sample_time)
 {
     uint8_t psd_avg_limit = (uint8_t)sample_time*AUDIO_RATE/1024;
+    
+    //SEGGER_RTT_printf(0, "Mic - number of cycles %d\n", psd_avg_limit);
+    
     fft_results_t results;
 
-    while(1)
-    {
+    for( uint16_t i = 0; i < psd_avg_limit; i++ ) 
+    {  
+        nrf_delay_ms(20);
+   
         if(i2s_data_ready)
         {
+            SEGGER_RTT_WriteString(0, "Mic - here we go\n");
+            
             i2s_data_ready = 0;
+            
             fft_process(m_fft_input_f32, &arm_cfft_sR_f32_len1024, m_fft_output_f32, I2S_BUFFER_SIZE/2);
 		
             /* Clear FPSCR register and clear pending FPU interrupts. This code is based on
                nRF5x_release_notes.txt in documentation folder. It is a necessary part of code when
                application using power saving mode and after handling FPU errors in polling mode. */
             __set_FPSCR(__get_FPSCR() & ~(FPU_EXCEPTION_MASK));                                            // Clear any exceptions generated the FFT analysis
+            
             (void) __get_FPSCR();
+            
             NVIC_ClearPendingIRQ(FPU_IRQn);
-		    for(uint32_t i=0; i<I2S_BUFFER_SIZE/4; i++)
+            
+            for(uint32_t i=0; i<I2S_BUFFER_SIZE/4; i++)
             {
                 psd_f32[i].complex_mag += m_fft_output_f32[i];                                             // Add new FFT value to the sum array element-by-element
             }
+            
             psd_avg_count++;
+            
+            SEGGER_RTT_WriteString(0, "all done with DR\n");
+            SEGGER_RTT_printf(0, "%d\r\n", psd_avg_count);
+ 
         }
-        if(psd_avg_count >= psd_avg_limit)
-        {
-            for(uint32_t i=0; i<I2S_BUFFER_SIZE/4; i++)
-            {
-                psd_f32[i].complex_mag /= (float)psd_avg_limit;                                            // Divide PSD sum arrray element by the number of scans
-                if(i > 0)
-                {
-                    psd_f32[i].complex_mag *= 2.0f;
-                }
-		        /*printf("\r\n%.3f,%.4e", (float)AUDIO_RATE*(float)psd_f32[i].freq/1022.0f,                  // Diagnostic; print output to UART for inspection/analysis
-                       psd_f32[i].complex_mag);*/
-            }
-            /*printf("\r\n");*/
-            psd_avg_count = 0;
-            break;
-        }
+ 
     }
+        
+    //if(psd_avg_count >= psd_avg_limit)
+    //{
+    for(uint32_t i=0; i<I2S_BUFFER_SIZE/4; i++)
+    {
+        psd_f32[i].complex_mag /= (float)psd_avg_limit;                                            // Divide PSD sum arrray element by the number of scans
+        
+        if(i > 0)
+        {
+            psd_f32[i].complex_mag *= 2.0f;
+        }
+	/*printf("\r\n%.3f,%.4e", (float)AUDIO_RATE*(float)psd_f32[i].freq/1022.0f,                  // Diagnostic; print output to UART for inspection/analysis
+        psd_f32[i].complex_mag);*/
+    }
+    /*printf("\r\n");*/
+    psd_avg_count = 0;
+    //    break;
+    //}
+    //}
+    
+    SEGGER_RTT_WriteString(0, "done with while\n");
+    
+    /*
+    
     qsort(psd_f32, 512, sizeof(struct psd_bin_t), psd_bin_comp);                                           // Sorts in ascending order of complex mag
     results.max = psd_f32[511].complex_mag;                                                                // Maximum is the last element in the sort
     results.avg = 0.0f;
+    
     for(uint32_t i=0; i<512; i++)
     {
         results.avg += psd_f32[i].complex_mag;
     }
+    
     results.avg /= 512.0f;
+    
     for(uint8_t i=0; i<4; i++)                                                                             // Load the four strongest PSD peaks into the results structure variable
     {
         results.freq[i]        = (float)AUDIO_RATE*(float)psd_f32[511 - i].freq/1022.0f;
         results.complex_mag[i] = psd_f32[511 - i].complex_mag;
     }
+    
     for(uint32_t i=0; i<512; i++)                                                                          // Reset PSD results arrays for the next call
     {
         psd_f32[i].complex_mag = 0.0f;
-		psd_f32[i].freq        = i;
+        psd_f32[i].freq = i;
     }
+    */
     return results;
 }

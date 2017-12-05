@@ -132,8 +132,8 @@
                                                                                    // 0 = infinite advertizing                                                                                        
 #define CONN_CFG_TAG                     1                                         //< A tag that refers to the BLE stack configuration we set with @ref sd_ble_cfg_set. Default tag is @ref BLE_CONN_CFG_TAG_DEFAULT. */
 
-#define MEAS_INTERVAL                    APP_TIMER_TICKS(1000)
-#define SENSOR_CONTACT_DETECTED_INTERVAL APP_TIMER_TICKS(5000)                      /**< Sensor Contact Detected toggle interval (ticks). */
+#define MEAS_INTERVAL                    APP_TIMER_TICKS(2000)                     //measure every second
+#define SENSOR_CONTACT_DETECTED_INTERVAL APP_TIMER_TICKS(5000)                     /**< Sensor Contact Detected toggle interval (ticks). */
 
 #define MIN_CONN_INTERVAL                MSEC_TO_UNITS( 30, UNIT_1_25_MS)           /**< Minimum acceptable connection interval (0.03 seconds). */
 #define MAX_CONN_INTERVAL                MSEC_TO_UNITS(200, UNIT_1_25_MS)           /**< Maximum acceptable connection interval (0.65 second). */
@@ -1202,10 +1202,20 @@ static void update_battery(void)
     
     //for debugging let's record the actual voltage
     battery_level8 = (uint8_t)(Current_VBATT() - 300);
-    //SEGGER_RTT_printf(0, "battery_level8: %d\n", battery_level8);
+    SEGGER_RTT_printf(0, "battery_level8: %d\n", battery_level8);
     
     update_status_flags();
-            
+          
+    //audio processing
+    //SEGGER_RTT_WriteString(0, "Mic!\n");
+    
+    //ICS_Turn_Off();
+    
+    /*fft_results_t res = */ //sample_mic( 2.0 /*seconds??*/ );
+    
+    
+    //SEGGER_RTT_printf(0, "audio max: %d\n", (uint32_t)(res.max*100.0));
+    
     //bluetooth update
     ret_code_t err_code = NRF_SUCCESS;  
     
@@ -1250,14 +1260,19 @@ static void update_fast(void)
     BMP280H8 = (uint8_t)( (resultPTH[2]/1000.00)           );
     
     //light intensity
+    //just get white for now for simplicity
     VEML6040_Get_Data( resultVME );
-    //the different colors are largely useless - just get white
     
     //acceleration
     BMA280_Get_Data( resultBMA );
     
     //capacitive sensing on 4 channels
-    FDC1004_Get_Data( resultFDC );
+    //FDC1004_Get_Data( resultFDC );
+    
+    //for(uint16_t i=0; i<750; i++) {
+    //    FDC1004_Get_Data( resultFDC );
+    //    nrf_delay_ms(2);
+    //};
         
     uint8_t action = 3;
     
