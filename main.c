@@ -179,6 +179,7 @@ static int32_t  resultPTH[3]; //PTH from sensor 1
 static int16_t  resultVME[4];
 static int16_t  resultBMA[3];
 static float    resultFDC[4];
+static float    resultMIC[8];
 
 static uint8_t  battery_level8        = 0;
 static uint8_t  battery_level_Percent = 0;
@@ -1188,8 +1189,17 @@ void save_or_stream( uint8_t action, uint16_t counter, uint8_t batt, \
     }
 }
 
-static void update_battery(void)
+static void update_battery_mic(void)
 {            
+    //sample sound
+    ICS_Sample();
+    ICS_Get_Data( resultMIC );
+    
+    //we still need to save this somewhere......
+    //SEGGER_RTT_printf(0, "Audio max: %d avg: %d\n", (uint32_t)(resultMIC[0]), (uint32_t)(resultMIC[1]));
+    //SEGGER_RTT_printf(0, "Audio f: %d %d %d\n", (uint32_t)(resultMIC[2]), (uint32_t)(resultMIC[3]), (uint32_t)(resultMIC[4]));
+    //SEGGER_RTT_printf(0, "Audio m: %d %d %d\n", (uint32_t)(resultMIC[5]), (uint32_t)(resultMIC[6]), (uint32_t)(resultMIC[7]));
+    
     //Battery ADC read
     //this will update Current_VBATT() via callback
     nrf_drv_saadc_sample(); 
@@ -1205,17 +1215,7 @@ static void update_battery(void)
     SEGGER_RTT_printf(0, "battery_level8: %d\n", battery_level8);
     
     update_status_flags();
-          
-    //audio processing
-    //SEGGER_RTT_WriteString(0, "Mic!\n");
-    
-    //ICS_Turn_Off();
-    
-    /*fft_results_t res = */ //sample_mic( 2.0 /*seconds??*/ );
-    
-    
-    //SEGGER_RTT_printf(0, "audio max: %d\n", (uint32_t)(res.max*100.0));
-    
+              
     //bluetooth update
     ret_code_t err_code = NRF_SUCCESS;  
     
@@ -1242,9 +1242,10 @@ static void update_fast(void)
     //Green flashes means we are sampling
     flash_green();
     
-    if ( batt_cycle > 3 ) 
+    //sometimes, let's check the battery and record the sound
+    if ( batt_cycle > 5 ) 
     {
-        update_battery();
+        update_battery_mic();
         batt_cycle = 0;
     } else {
         batt_cycle++;
@@ -1253,28 +1254,26 @@ static void update_fast(void)
     heartbeat16++; //this is the number of sampling cycles. 
         
     //Pressure, Temp, and Humidity
-    BME280_Get_Data(resultPTH);
+    BME280_Get_Data( resultPTH );
     
     BMP280P8 = (uint8_t)( (resultPTH[0]/  10.00) - 10000.0 ); //need to add 10000 to the pressure and then divide by 10. 
     BMP280T8 = (uint8_t)( (resultPTH[1]/  10.00) - 200.0   ); //need to add 200 to the temp and then divide by 10
     BMP280H8 = (uint8_t)( (resultPTH[2]/1000.00)           );
     
-    //light intensity
-    //just get white for now for simplicity
+    //light intensity just get white for now for simplicity
     VEML6040_Get_Data( resultVME );
     
     //acceleration
     BMA280_Get_Data( resultBMA );
-    
+
     //capacitive sensing on 4 channels
     //FDC1004_Get_Data( resultFDC );
-    
     //for(uint16_t i=0; i<750; i++) {
     //    FDC1004_Get_Data( resultFDC );
     //    nrf_delay_ms(2);
     //};
         
-    uint8_t action = 3;
+    uint8_t action = 3; //default to doing nothing 
     
     if( SaveToFLASH && LiveStream ) {       //save and stream
         action = 2;    
@@ -1288,12 +1287,13 @@ static void update_fast(void)
     else {
         /* !SaveToFLASH && !LiveStream */
         /* do nothing*/
+        /* action = 3; default to doing nothing  */
     }
     
     if(action < 3 ) {
         save_or_stream( action, heartbeat16, battery_level8,
                       BMP280P8, BMP280T8, BMP280H8,
-                      resultVME[3],
+                      resultVME[3], //just save one color
                       resultBMA[0], resultBMA[1], resultBMA[2] );    
     }
         
@@ -1374,7 +1374,9 @@ int main(void)
     nrf_delay_ms(500);
     
     //fire up the mic
-    ICS_Turn_On(); 
+    ICS_Configure(); 
+    
+    
     nrf_delay_ms(500);
         
     GLOB_datastart = FLASH_Get_First_Available_Location();
@@ -1383,6 +1385,8 @@ int main(void)
     flash_red();
      
     RTC1_timer_start();
+    
+    
     
     //controls visibility to bluetooth - not clear to me if advertizing interval is honored
     advertising_start(erase_bonds);

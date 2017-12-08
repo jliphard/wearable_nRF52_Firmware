@@ -96,12 +96,33 @@ static float32_t          m_fft_output_f32[I2S_BUFFER_SIZE/2];  // FFT output da
 static struct psd_bin_t   psd_f32[I2S_BUFFER_SIZE/2];           // FFT output data; scan average. Frequency domain
 static bool               m_error_encountered;                  // I2S data callback error status
 static volatile bool      pwm_ready_flag;                       // A PWM ready status
-static uint8_t            i2s_data_ready   = 0;                 // I2S data ready for FFT analysis
-static uint8_t            psd_avg_count    = 0;                 // FFT scan counter for scan averaging
+static uint8_t            psd_avg_count = 0;                 // FFT scan counter for scan averaging
+
+//We process every 20 datapackets - no idea how long that actually is.  
+static uint8_t            psd_avg_limit = 10; //(uint8_t)sample_time*AUDIO_RATE/1024;
+//20 = 1 full second of sampling
+//each packet is 50 ms
+
 static uint32_t           m_ifft_flag      = 0;                 // Flag that selects forward (0) or inverse (1) transform.
 static uint32_t           m_do_bit_reverse = 1;                 // Flag that enables (1) or disables (0) bit reversal of output.
 
 fft_results_t results;
+
+void ICS_Get_Data(float * dest) {
+    
+    dest[0] = results.max;
+    dest[1] = results.avg;
+    dest[2] = results.freq[0];
+    dest[3] = results.freq[1];
+    dest[4] = results.freq[2];
+    dest[5] = results.complex_mag[0];
+    dest[6] = results.complex_mag[1];
+    dest[7] = results.complex_mag[2];
+    
+}
+
+APP_PWM_INSTANCE(PWM1,1); // Create the instance "PWM1" using TIMER1.
+APP_PWM_INSTANCE(PWM2,2); // Create the instance "PWM2" using TIMER2.
 
 static void pwm_ready_callback(uint32_t pwm_id)                                                            // PWM ready callback function
 {
@@ -135,8 +156,6 @@ int psd_bin_comp(const void *elem1, const void *elem2) // PSD complex mag float 
 
 static bool copy_samples(uint32_t const * p_buffer, uint16_t number_of_words) // I2S data callback read and FFT buffer write function
 {
-    //We process every 20 datapackets - no idea how long that actually is.  
-    uint8_t psd_avg_limit = 20; //(uint8_t)sample_time*AUDIO_RATE/1024;
     
     for(uint32_t i=0; i<(I2S_BUFFER_SIZE/2); i++)
     {
@@ -145,36 +164,33 @@ static bool copy_samples(uint32_t const * p_buffer, uint16_t number_of_words) //
     }
     
     //SEGGER_RTT_WriteString(0, "bool copy_samples\n");
+    //SEGGER_RTT_printf(0, "samples: %d\n", psd_avg_count);
     //SEGGER_RTT_printf(0, "%f %f %f %f\r\n", m_fft_input_f32[0], m_fft_input_f32[2], m_fft_input_f32[4], m_fft_input_f32[6]);
-    i2s_data_ready = 1;
   
     //here, we are adding new data
-    if(1==1)
-    {
-        fft_process(m_fft_input_f32, &arm_cfft_sR_f32_len1024, m_fft_output_f32, I2S_BUFFER_SIZE/2);
+    fft_process(m_fft_input_f32, &arm_cfft_sR_f32_len1024, m_fft_output_f32, I2S_BUFFER_SIZE/2);
 		
-        /* Clear FPSCR register and clear pending FPU interrupts. This code is based on
-           nRF5x_release_notes.txt in documentation folder. It is a necessary part of code when
-           application using power saving mode and after handling FPU errors in polling mode. */
-        __set_FPSCR(__get_FPSCR() & ~(FPU_EXCEPTION_MASK)); // Clear any exceptions generated the FFT analysis
+    /* Clear FPSCR register and clear pending FPU interrupts. This code is based on
+    nRF5x_release_notes.txt in documentation folder. It is a necessary part of code when
+    application using power saving mode and after handling FPU errors in polling mode. */
+    __set_FPSCR(__get_FPSCR() & ~(FPU_EXCEPTION_MASK)); // Clear any exceptions generated the FFT analysis
             
-        (void) __get_FPSCR();
+    (void) __get_FPSCR();
             
-        NVIC_ClearPendingIRQ(FPU_IRQn);
+    NVIC_ClearPendingIRQ(FPU_IRQn);
             
-        for(uint32_t i=0; i<I2S_BUFFER_SIZE/4; i++)
-        {
-            psd_f32[i].complex_mag += m_fft_output_f32[i]; // Add new FFT value to the sum array element-by-element
-        }
-            
-        psd_avg_count++;
-            
-        //SEGGER_RTT_printf(0, "%d\r\n", psd_avg_count);
+    for(uint32_t i=0; i<I2S_BUFFER_SIZE/4; i++)
+    {
+        psd_f32[i].complex_mag += m_fft_output_f32[i]; // Add new FFT value to the sum array element-by-element
     }
-  
+            
+    psd_avg_count++;
+            
     //ok - we have enough data - let's process it
     if(psd_avg_count >= psd_avg_limit)
     {
+        //SEGGER_RTT_WriteString(0, "Let's process!\n");
+        
         for(uint32_t i=0; i<I2S_BUFFER_SIZE/4; i++)
         {
             psd_f32[i].complex_mag /= (float)psd_avg_limit; // Divide PSD sum array element by the number of scans
@@ -183,15 +199,10 @@ static bool copy_samples(uint32_t const * p_buffer, uint16_t number_of_words) //
             {
                 psd_f32[i].complex_mag *= 2.0f;
             }
-	/* // Diagnostic; print output to UART for inspection/analysis
-        printf("\r\n%.3f,%.4e", (float)AUDIO_RATE*(float)psd_f32[i].freq/1022.0f, 
-        psd_f32[i].complex_mag);
-         */
         }
-        /*printf("\r\n");*/
+        
         psd_avg_count = 0;
-        //SEGGER_RTT_printf(0, "%d\r\n", psd_avg_count);
-    
+  
         qsort(psd_f32, 512, sizeof(struct psd_bin_t), psd_bin_comp); // Sorts in ascending order of complex mag
         results.max = psd_f32[511].complex_mag;                      // Maximum is the last element in the sort
         results.avg = 0.0f;
@@ -205,7 +216,7 @@ static bool copy_samples(uint32_t const * p_buffer, uint16_t number_of_words) //
     
         for(uint8_t i=0; i<3; i++) // Load the four strongest PSD peaks into the results structure variable
         {
-            results.freq[i]        = (float)AUDIO_RATE*(float)psd_f32[511 - i].freq/1022.0f;
+            results.freq[i] = (float)AUDIO_RATE*(float)psd_f32[511 - i].freq/1022.0f;
             results.complex_mag[i] = psd_f32[511 - i].complex_mag;
         }
     
@@ -217,11 +228,14 @@ static bool copy_samples(uint32_t const * p_buffer, uint16_t number_of_words) //
         
         if ( SEGGER_MIC == 1 )
         {
-            //SEGGER_RTT_WriteString(0, "All done!\n");
             SEGGER_RTT_printf(0, "Audio max: %d avg: %d\n", (uint32_t)(results.max), (uint32_t)(results.avg));
             SEGGER_RTT_printf(0, "Audio f: %d %d %d\n", (uint32_t)(results.freq[0]), (uint32_t)(results.freq[1]), (uint32_t)(results.freq[2]));
             SEGGER_RTT_printf(0, "Audio m: %d %d %d\n", (uint32_t)(results.complex_mag[0]), (uint32_t)(results.complex_mag[1]), (uint32_t)(results.complex_mag[2]));
         }
+        
+        //we are done, turn system off.
+        nrf_drv_i2s_stop();
+        
     }    
   
   return true;
@@ -229,6 +243,7 @@ static bool copy_samples(uint32_t const * p_buffer, uint16_t number_of_words) //
 
 static void check_rx_data(uint32_t const * p_buffer, uint16_t number_of_words)
 {
+
     if (!m_error_encountered)
     {
         m_error_encountered = !copy_samples(p_buffer, number_of_words);
@@ -247,31 +262,30 @@ static void data_handler(uint32_t const * p_data_received,
         check_rx_data(p_data_received, number_of_words);
     }
 
-    // Non-NULL value in 'p_data_to_send' indicates that the driver needs
-    // a new portion of data to send. Nothing done here; RX only...
-    if (p_data_to_send != NULL)
+}
+
+void ICS_Sample(void) 
+{
+    ret_code_t err_code;
+    
+    err_code = nrf_drv_i2s_start(m_buffer_rx, NULL, I2S_BUFFER_SIZE, 0); // RX only; "NULL" XMIT buffer
+       
+    APP_ERROR_CHECK(err_code);
+    
+    memset(m_buffer_rx, 0xCC, sizeof(m_buffer_rx)); // Initialize I2S data callback buffer
+    
+    for(uint32_t i=0; i<I2S_BUFFER_SIZE/2; i++)     // Initialize the PSD averaging array
     {
+      psd_f32[i].complex_mag = 0.0f;
+      psd_f32[i].freq        = i;
     }
+    
+    if ( SEGGER_MIC == 1 )
+        SEGGER_RTT_WriteString(0, "Turned on mic - sampling now\n");
+    
 }
 
-void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
-{
-    #ifdef DEBUG
-    app_error_print(id, pc, info);
-    #endif
-
-    while (1);
-}
-
-APP_PWM_INSTANCE(PWM1,1); // Create the instance "PWM1" using TIMER1.
-APP_PWM_INSTANCE(PWM2,2); // Create the instance "PWM2" using TIMER2.
-
-void ICS_Turn_Off(void) 
-{
-    nrf_drv_i2s_stop();
-};
-
-void ICS_Turn_On(void) 
+void ICS_Configure(void) 
 {
     ret_code_t err_code;
     
@@ -307,108 +321,4 @@ void ICS_Turn_On(void)
     app_pwm_channel_duty_set(&PWM1, 0, 50);                                                                // Set at 50% duty cycle for square wave
     app_pwm_channel_duty_set(&PWM2, 0, 50);
     
-    // Instantiate I2S
-    err_code = nrf_drv_i2s_start(m_buffer_rx, NULL, I2S_BUFFER_SIZE, 0);                                   // RX only; "NULL" XMIT buffer
-       
-    APP_ERROR_CHECK(err_code);
-    
-    memset(m_buffer_rx, 0xCC, sizeof(m_buffer_rx));                                                        // Initialize I2S data callback buffer
-    
-    for(uint32_t i=0; i<I2S_BUFFER_SIZE/2; i++)                                                            // Initialize the PSD averaging array
-    {
-      psd_f32[i].complex_mag = 0.0f;
-      psd_f32[i].freq        = i;
-    }
-}
-
-fft_results_t sample_mic(float sample_time)
-{
-    uint8_t psd_avg_limit = (uint8_t)sample_time*AUDIO_RATE/1024;
-    
-    //SEGGER_RTT_printf(0, "Mic - number of cycles %d\n", psd_avg_limit);
-    
-    fft_results_t results;
-
-    for( uint16_t i = 0; i < psd_avg_limit; i++ ) 
-    {  
-        nrf_delay_ms(20);
-   
-        if(i2s_data_ready)
-        {
-            SEGGER_RTT_WriteString(0, "Mic - here we go\n");
-            
-            i2s_data_ready = 0;
-            
-            fft_process(m_fft_input_f32, &arm_cfft_sR_f32_len1024, m_fft_output_f32, I2S_BUFFER_SIZE/2);
-		
-            /* Clear FPSCR register and clear pending FPU interrupts. This code is based on
-               nRF5x_release_notes.txt in documentation folder. It is a necessary part of code when
-               application using power saving mode and after handling FPU errors in polling mode. */
-            __set_FPSCR(__get_FPSCR() & ~(FPU_EXCEPTION_MASK));                                            // Clear any exceptions generated the FFT analysis
-            
-            (void) __get_FPSCR();
-            
-            NVIC_ClearPendingIRQ(FPU_IRQn);
-            
-            for(uint32_t i=0; i<I2S_BUFFER_SIZE/4; i++)
-            {
-                psd_f32[i].complex_mag += m_fft_output_f32[i];                                             // Add new FFT value to the sum array element-by-element
-            }
-            
-            psd_avg_count++;
-            
-            SEGGER_RTT_WriteString(0, "all done with DR\n");
-            SEGGER_RTT_printf(0, "%d\r\n", psd_avg_count);
- 
-        }
- 
-    }
-        
-    //if(psd_avg_count >= psd_avg_limit)
-    //{
-    for(uint32_t i=0; i<I2S_BUFFER_SIZE/4; i++)
-    {
-        psd_f32[i].complex_mag /= (float)psd_avg_limit;                                            // Divide PSD sum arrray element by the number of scans
-        
-        if(i > 0)
-        {
-            psd_f32[i].complex_mag *= 2.0f;
-        }
-	/*printf("\r\n%.3f,%.4e", (float)AUDIO_RATE*(float)psd_f32[i].freq/1022.0f,                  // Diagnostic; print output to UART for inspection/analysis
-        psd_f32[i].complex_mag);*/
-    }
-    /*printf("\r\n");*/
-    psd_avg_count = 0;
-    //    break;
-    //}
-    //}
-    
-    SEGGER_RTT_WriteString(0, "done with while\n");
-    
-    /*
-    
-    qsort(psd_f32, 512, sizeof(struct psd_bin_t), psd_bin_comp);                                           // Sorts in ascending order of complex mag
-    results.max = psd_f32[511].complex_mag;                                                                // Maximum is the last element in the sort
-    results.avg = 0.0f;
-    
-    for(uint32_t i=0; i<512; i++)
-    {
-        results.avg += psd_f32[i].complex_mag;
-    }
-    
-    results.avg /= 512.0f;
-    
-    for(uint8_t i=0; i<4; i++)                                                                             // Load the four strongest PSD peaks into the results structure variable
-    {
-        results.freq[i]        = (float)AUDIO_RATE*(float)psd_f32[511 - i].freq/1022.0f;
-        results.complex_mag[i] = psd_f32[511 - i].complex_mag;
-    }
-    
-    for(uint32_t i=0; i<512; i++)                                                                          // Reset PSD results arrays for the next call
-    {
-        psd_f32[i].complex_mag = 0.0f;
-        psd_f32[i].freq = i;
-    }
-    */
-    return results;
 }

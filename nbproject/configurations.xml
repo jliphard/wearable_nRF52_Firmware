@@ -208,13 +208,6 @@
         </logicalFolder>
       </logicalFolder>
     </logicalFolder>
-    <df root="." name="0">
-      <in>ADC.c</in>
-      <in>BME280.c</in>
-      <in>I2C.c</in>
-      <in>SPIFlash.c</in>
-      <in>main.c</in>
-    </df>
     <logicalFolder name="nRF5_SDK_13"
                    displayName="nRF5_SDK_13"
                    projectFiles="true"
@@ -268,6 +261,13 @@
         </logicalFolder>
       </logicalFolder>
     </logicalFolder>
+    <df root="." name="0">
+      <in>ADC.c</in>
+      <in>BME280.c</in>
+      <in>I2C.c</in>
+      <in>SPIFlash.c</in>
+      <in>main.c</in>
+    </df>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
                    projectFiles="false"

@@ -5,9 +5,13 @@ OUTPUT_DIRECTORY := _build
 #SDK_ROOT := ../../../../../..
 #PROJ_DIR := ../../..
 
-SDK_ROOT := /ARM/nRF5_SDK_13/
-PROJ_DIR := /Users/janliphardt/GH_wearable_Firmware/
+#/Users/janliphardt/GH_wearable_Firmware/
+#/ARM/nRF5_SDK_13/
 
+PROJ_DIR := /Users/janliphardt/Documents/GitHub/wearable_nRF52_Firmware
+SDK_ROOT := /Users/janliphardt/opt/nRF5_SDK_13
+NRF_ROOT := /Users/janliphardt/opt/nRF5_Command/nrfjprog
+	
 $(OUTPUT_DIRECTORY)/nrf52832_xxaa.out: LINKER_SCRIPT  := mentaid.ld
 # 
 # Source files common to all targets
@@ -298,14 +302,14 @@ $(foreach target, $(TARGETS), $(call define_target, $(target)))
 # Flash the program
 flash: $(OUTPUT_DIRECTORY)/nrf52832_xxaa.hex
 	@echo Flashing: $<
-	nrfjprog --program $< -f nrf52 --sectorerase
-	nrfjprog --reset -f nrf52
+	$(NRF_ROOT)/nrfjprog --program $< -f nrf52 --sectorerase
+	$(NRF_ROOT)/nrfjprog --reset -f nrf52
 
 # Flash softdevice
 flash_softdevice:
 	@echo Flashing: s132_nrf52_4.0.2_softdevice.hex
-	nrfjprog --program $(SDK_ROOT)/components/softdevice/s132/hex/s132_nrf52_4.0.2_softdevice.hex -f nrf52 --sectorerase 
-	nrfjprog --reset -f nrf52
+	$(NRF_ROOT)/nrfjprog --program $(SDK_ROOT)/components/softdevice/s132/hex/s132_nrf52_4.0.2_softdevice.hex -f nrf52 --sectorerase 
+	$(NRF_ROOT)/nrfjprog --reset -f nrf52
 
 erase:
-	nrfjprog --eraseall -f nrf52
+	$(NRF_ROOT)/nrfjprog --eraseall -f nrf52

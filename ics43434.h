@@ -12,12 +12,12 @@ typedef struct
 {
   float     max;
   float     avg;
-  float32_t freq[4];
-  float32_t complex_mag[4];
+  float32_t freq[3];
+  float32_t complex_mag[3];
 } fft_results_t;
 
-void          ICS_Turn_On(void);
-void          ICS_Turn_Off(void);
-fft_results_t sample_mic(float sample_time);
+void          ICS_Sample(void);
+void          ICS_Configure(void);
+void          ICS_Get_Data(float * dest);
     
 #endif /* MA_ICS43434_H_ */
